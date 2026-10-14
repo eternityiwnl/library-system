@@ -15,6 +15,20 @@
       "when": 1791958426651,
       "tag": "0001_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791959417753,
+      "tag": "0002_pg_trgm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791959418972,
+      "tag": "0003_catalog",
+      "breakpoints": true
     }
   ]
 }

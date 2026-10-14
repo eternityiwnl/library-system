@@ -55,6 +55,25 @@ export function Field({
   );
 }
 
+export function Textarea({
+  label,
+  error,
+  ...props
+}: ComponentProps<"textarea"> & { label: string; error?: string }) {
+  return (
+    <label className="flex flex-col gap-1.5 text-sm">
+      <span className="font-medium">{label}</span>
+      <textarea
+        aria-invalid={error ? true : undefined}
+        rows={4}
+        className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 aria-invalid:border-red-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 sm:text-sm"
+        {...props}
+      />
+      {error && <span className="text-red-600">{error}</span>}
+    </label>
+  );
+}
+
 export function Select({
   label,
   children,
@@ -64,6 +83,9 @@ export function Select({
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="font-medium">{label}</span>
       <select
+        // React 19 маягт илгээсний дараа анхны сонголт руу reset хийдэг; defaultValue
+        // өөрчлөгдөхөд дахин mount хийснээр хадгалсан утга харагдана
+        key={String(props.defaultValue)}
         className="h-10 rounded-md border border-zinc-300 bg-white px-3 text-base text-zinc-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 sm:text-sm"
         {...props}
       >

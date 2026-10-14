@@ -52,4 +52,26 @@ export const fields = {
   ),
   email: z.string().trim().toLowerCase().pipe(z.email("Имэйл хаяг буруу байна")),
   staffRole: z.enum(["librarian", "admin"], { error: "Эрх сонгоно уу" }),
+  title: z.string().trim().min(1, "Номын нэр оруулна уу").max(300, "Хэт урт байна"),
+  author: z.string().trim().min(1, "Зохиогч оруулна уу").max(200, "Хэт урт байна"),
+  categoryId: z.coerce.number({ error: "Ангилал сонгоно уу" }).int().positive("Ангилал сонгоно уу"),
+  // Зураас, зайг хасаад 10 эсвэл 13 оронтой ISBN-ийг хадгална
+  isbn: z.preprocess(
+    (v) => (typeof v === "string" ? v.replace(/[\s-]/g, "").toUpperCase() || null : v),
+    z
+      .string()
+      .regex(/^(\d{9}[\dX]|\d{13})$/, "ISBN 10 эсвэл 13 оронтой байна")
+      .nullable(),
+  ),
+  optionalText: (max: number) =>
+    z.preprocess(emptyToNull, z.string().trim().max(max, "Хэт урт байна").nullable()),
+  year: z.preprocess(
+    emptyToNull,
+    z.coerce
+      .number({ error: "Он буруу байна" })
+      .int("Он буруу байна")
+      .min(1000, "Он буруу байна")
+      .max(new Date().getFullYear() + 1, "Он буруу байна")
+      .nullable(),
+  ),
 };

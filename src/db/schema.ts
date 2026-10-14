@@ -3,6 +3,7 @@ import {
   index,
   integer,
   pgEnum,
+  pgSequence,
   pgTable,
   smallint,
   text,
@@ -43,7 +44,12 @@ export const books = pgTable(
     description: text("description"),
     ...timestamps,
   },
-  (t) => [index("books_category_idx").on(t.categoryId)],
+  (t) => [
+    index("books_category_idx").on(t.categoryId),
+    // pg_trgm: ILIKE '%...%' хайлтыг индексээр хурдасгана (кирилл ч ажиллана)
+    index("books_title_trgm_idx").using("gin", t.title.op("gin_trgm_ops")),
+    index("books_author_trgm_idx").using("gin", t.author.op("gin_trgm_ops")),
+  ],
 );
 
 // Номын хувийн төлөв. "Олгосон" төлөв энд байхгүй — тэр нь буцаагдаагүй
@@ -55,6 +61,9 @@ export const copyStatus = pgEnum("copy_status", [
   "withdrawn", // Хасагдсан
 ]);
 
+// Бүртгэлийн дугаар DB дээр автоматаар олгогдоно — давхцах боломжгүй
+export const inventoryNumberSeq = pgSequence("inventory_number_seq", { startWith: 1 });
+
 // Номын хувь (физик хувь бүр тусдаа)
 export const bookCopies = pgTable(
   "book_copies",
@@ -62,8 +71,11 @@ export const bookCopies = pgTable(
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     bookId: integer("book_id")
       .notNull()
-      .references(() => books.id, { onDelete: "restrict" }),
-    inventoryNumber: text("inventory_number").notNull(),
+      // Ном устгахад хувиуд хамт устна; зээлийн түүхтэй хувь бол loans-ийн FK хориглоно
+      .references(() => books.id, { onDelete: "cascade" }),
+    inventoryNumber: text("inventory_number")
+      .notNull()
+      .default(sql`lpad(nextval('inventory_number_seq')::text, 6, '0')`),
     status: copyStatus("status").default("active").notNull(),
     note: text("note"),
     ...timestamps,

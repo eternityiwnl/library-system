@@ -19,6 +19,8 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           <NavLink href="/staff" exact>
             Хяналтын самбар
           </NavLink>
+          <NavLink href="/staff/books">Номууд</NavLink>
+          <NavLink href="/staff/categories">Ангилал</NavLink>
           <NavLink href="/staff/readers">Уншигчид</NavLink>
           {user.role === "admin" && <NavLink href="/staff/users">Ажилтнууд</NavLink>}
           <NavLink href="/password">Нууц үг солих</NavLink>

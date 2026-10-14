@@ -63,8 +63,8 @@ npm run db:migrate
 ## Phases
 
 0. Setup
-1. Login and users ← current
-2. Catalog (categories, books, copies, Cyrillic search)
+1. Login and users
+2. Catalog (categories, books, copies, Cyrillic search) ← current
 3. Lending, returns, renewals, limits
 4. Fines and admin settings
 5. Reader portal

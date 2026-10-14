@@ -5,6 +5,7 @@ import { user } from "@/db/schema";
 import { Badge, Card, LinkButton, PageHeader } from "@/components/ui";
 import { requireRole } from "@/lib/session";
 import { realEmail } from "@/lib/users";
+import { containsPattern } from "@/lib/catalog";
 
 const PAGE_SIZE = 25;
 
@@ -18,8 +19,7 @@ export default async function ReadersPage({
   const query = q.trim();
   const page = Math.max(1, Number(pageParam) || 1);
 
-  // LIKE-ийн тусгай тэмдэгтүүдийг escape хийнэ
-  const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
+  const pattern = containsPattern(query);
   const where = and(
     eq(user.role, "reader"),
     query
