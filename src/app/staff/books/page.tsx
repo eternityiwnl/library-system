@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
-import { db } from "@/db";
-import { bookCopies, books, categories, loans } from "@/db/schema";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
-import { containsPattern, listCategories } from "@/lib/catalog";
+import { listCategories, searchBooks } from "@/lib/catalog";
 import { requireRole } from "@/lib/session";
 
 const PAGE_SIZE = 25;
@@ -19,45 +16,11 @@ export default async function BooksPage({
   const categoryId = Number(category) || null;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const pattern = containsPattern(query);
-  const isbnQuery = query.replace(/[\s-]/g, "").toUpperCase();
-  const where = and(
-    query
-      ? or(
-          ilike(books.title, pattern),
-          ilike(books.author, pattern),
-          isbnQuery ? ilike(books.isbn, containsPattern(isbnQuery)) : undefined,
-        )
-      : undefined,
-    categoryId ? eq(books.categoryId, categoryId) : undefined,
-  );
-
-  const [rows, [{ total }], allCategories] = await Promise.all([
-    db
-      .select({
-        id: books.id,
-        title: books.title,
-        author: books.author,
-        year: books.publishedYear,
-        category: categories.name,
-        copies: count(bookCopies.id),
-        // Олгох боломжтой = хэвийн төлөвтэй, одоо зээлэгдээгүй
-        available: sql<number>`count(${bookCopies.id}) filter (where ${bookCopies.status} = 'active' and not exists (
-          select 1 from ${loans} where ${loans.copyId} = ${bookCopies.id} and ${loans.returnedAt} is null))`.mapWith(Number),
-      })
-      .from(books)
-      .innerJoin(categories, eq(categories.id, books.categoryId))
-      .leftJoin(bookCopies, eq(bookCopies.bookId, books.id))
-      .where(where)
-      .groupBy(books.id, categories.name)
-      .orderBy(desc(books.createdAt))
-      .limit(PAGE_SIZE)
-      .offset((page - 1) * PAGE_SIZE),
-    db.select({ total: count() }).from(books).where(where),
+  const [{ rows, total, pages }, allCategories] = await Promise.all([
+    searchBooks({ query, categoryId, page, pageSize: PAGE_SIZE }),
     listCategories(),
   ]);
 
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageHref = (p: number) =>
     `/staff/books?${new URLSearchParams({ ...(query && { q: query }), ...(categoryId && { category: String(categoryId) }), page: String(p) })}`;
   const filtered = Boolean(query || categoryId);

@@ -67,6 +67,6 @@ npm run db:migrate
 2. Catalog (categories, books, copies, Cyrillic search)
 3. Lending, returns, renewals, limits
 4. Fines and admin settings
-   ← done through here; next: 5
-5. Reader portal
+5. Reader portal (public catalog at /catalog, reader page at /me)
+   ← done through here; next: 6
 6. Reports, audit log, email reminders, launch

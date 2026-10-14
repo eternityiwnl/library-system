@@ -144,6 +144,38 @@ export function Badge({ tone, children }: { tone: "green" | "gray" | "red"; chil
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${styles}`}>{children}</span>;
 }
 
+/** Хуудаслалт: href(p) нь p-р хуудасны холбоос */
+export function Pagination({
+  page,
+  pages,
+  href,
+  total,
+}: {
+  page: number;
+  pages: number;
+  href: (page: number) => string;
+  total?: number;
+}) {
+  if (pages <= 1) return null;
+  return (
+    <nav className="mt-4 flex items-center gap-3 text-sm" aria-label="Хуудаслалт">
+      {page > 1 && (
+        <Link href={href(page - 1)} className="hover:underline">
+          ← Өмнөх
+        </Link>
+      )}
+      <span className="text-zinc-500">
+        {page} / {pages} хуудас{total !== undefined && ` · нийт ${total}`}
+      </span>
+      {page < pages && (
+        <Link href={href(page + 1)} className="hover:underline">
+          Дараах →
+        </Link>
+      )}
+    </nav>
+  );
+}
+
 /** Нэг удаа харуулах түр нууц үг */
 export function PasswordReveal({ password }: { password: string }) {
   return (
