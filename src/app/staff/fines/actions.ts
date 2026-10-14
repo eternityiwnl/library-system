@@ -3,9 +3,10 @@
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { fines } from "@/db/schema";
+import { fines, user } from "@/db/schema";
 import { formatMoney } from "@/lib/format";
 import type { FormState } from "@/lib/forms";
+import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 
 export async function resolveFine(id: number, outcome: "paid" | "waived"): Promise<FormState> {
@@ -13,11 +14,17 @@ export async function resolveFine(id: number, outcome: "paid" | "waived"): Promi
   const staff = outcome === "waived" ? await requireRole("admin") : await requireRole("admin", "librarian");
 
   // status = 'unpaid' нөхцөлтэй update — давхар дарсан ч нэг л удаа бүртгэгдэнэ
-  const [fine] = await db
-    .update(fines)
-    .set({ status: outcome, resolvedAt: sql`now()`, resolvedBy: staff.id })
-    .where(and(eq(fines.id, id), eq(fines.status, "unpaid")))
-    .returning({ amount: fines.amount });
+  const fine = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(fines)
+      .set({ status: outcome, resolvedAt: sql`now()`, resolvedBy: staff.id })
+      .where(and(eq(fines.id, id), eq(fines.status, "unpaid")))
+      .returning({ amount: fines.amount, readerId: fines.readerId });
+    if (!row) return null;
+    const [reader] = await tx.select({ name: user.name }).from(user).where(eq(user.id, row.readerId));
+    await audit(staff, outcome === "paid" ? "fine.paid" : "fine.waived", `${reader?.name}: ${formatMoney(row.amount)}`, tx);
+    return row;
+  });
   if (!fine) return { error: "Торгууль олдсонгүй эсвэл аль хэдийн шийдвэрлэгдсэн" };
 
   revalidatePath("/staff", "layout");

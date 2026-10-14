@@ -167,4 +167,49 @@ export const fines = pgTable(
   ],
 );
 
+// Үйлдлийн бүртгэл: хэн, хэзээ, юу хийсэн. actor_name-ийг хуулж хадгална —
+// ажилтны нэр солигдсон ч түүх өөрчлөгдөхгүй.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    at: timestamp("at", { withTimezone: true }).defaultNow().notNull(),
+    actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
+    actorName: text("actor_name").notNull(),
+    action: text("action").notNull(),
+    summary: text("summary").notNull(),
+  },
+  (t) => [index("audit_log_at_idx").on(t.at), index("audit_log_action_idx").on(t.action)],
+);
+
+export const reminderKind = pgEnum("reminder_kind", ["due_soon", "overdue"]);
+
+// Илгээсэн сануулга — нэг зээлд нэг өдөр нэг төрлийн сануулга л явна (cron давтагдсан ч)
+export const reminderLog = pgTable(
+  "reminder_log",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    loanId: integer("loan_id")
+      .notNull()
+      .references(() => loans.id, { onDelete: "cascade" }),
+    kind: reminderKind("kind").notNull(),
+    sentOn: date("sent_on").notNull(),
+    recipient: text("recipient").notNull(),
+    // Resend-ээс буцсан алдаа (амжилттай бол null)
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("reminder_log_once_per_day_idx").on(t.loanId, t.kind, t.sentOn)],
+);
+
+// scripts/demo-data.mts-ийн үүсгэсэн мөрүүд — зөвхөн эдгээрийг цэвэрлэнэ
+export const demoRecords = pgTable(
+  "demo_records",
+  {
+    tableName: text("table_name").notNull(),
+    recordId: text("record_id").notNull(),
+  },
+  (t) => [uniqueIndex("demo_records_pk").on(t.tableName, t.recordId)],
+);
+
 export * from "./auth-schema";

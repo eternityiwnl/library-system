@@ -60,6 +60,38 @@ npm run db:migrate
 
 `npm run db:studio` opens a browser view of the data.
 
+## Demo data
+
+\
+> library-system@0.1.0 demo:seed
+> node --env-file=.env.local scripts/demo-data.mts seed
+
+Демо өгөгдөл нэмлээ: 34 ном, 83 хувь, 25 уншигч, 1187 зээл, 211 торгууль.
+Нэвтрэх эрхүүд: .demo-credentials.txt
+
+> library-system@0.1.0 demo:clear
+> node --env-file=.env.local scripts/demo-data.mts clear
+
+Демо өгөгдлийг устгалаа: {
+  audit: 392,
+  fines: 211,
+  loans: 1187,
+  copies: 83,
+  books: 34,
+  categories: 7,
+  users: 26
+}
+Demo logins are written to  (git-ignored). Every row the seed creates is
+listed in the  table;  deletes exactly those.
+
+## Email reminders
+
+Vercel Cron calls  daily at 01:00 UTC (09:00 Ulaanbaatar), protected by
+. Readers get one email for loans due tomorrow and for overdue loans (day 1, then
+every 7 days);  keeps it to once per loan per day. Admins can also send from
+**Имэйл сануулга**. Env: , ,  (see ).
+Without a verified domain Resend only delivers to the account owner, so set to that address and every reminder goes there with the real recipient in the subject.
+
 ## Phases
 
 0. Setup
@@ -68,5 +100,4 @@ npm run db:migrate
 3. Lending, returns, renewals, limits
 4. Fines and admin settings
 5. Reader portal (public catalog at /catalog, reader page at /me)
-   ← done through here; next: 6
-6. Reports, audit log, email reminders, launch
+6. Activity log, reports, email reminders, demo data

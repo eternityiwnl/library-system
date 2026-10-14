@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { fieldErrorsOf, fields, invalid, type FormState } from "@/lib/forms";
+import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 import {
   createAccount,
@@ -39,7 +40,7 @@ async function uniquenessErrors(data: z.infer<typeof readerSchema>, exceptUserId
 }
 
 export async function createReader(_: FormState, formData: FormData): Promise<FormState> {
-  await requireRole("admin", "librarian");
+  const staff = await requireRole("admin", "librarian");
   const parsed = readerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(formData, fieldErrorsOf(parsed.error));
   const data = parsed.data;
@@ -54,13 +55,14 @@ export async function createReader(_: FormState, formData: FormData): Promise<Fo
     phone: data.phone,
     cardNumber: data.cardNumber,
   });
+  await audit(staff, "user.create", `Уншигч ${data.name} (${data.cardNumber.toUpperCase()})`);
   revalidatePath("/staff/readers");
   // Нууц үгийг URL-д хийхгүй (хөтчийн түүх, серверийн лог-д үлдэнэ) — хариунд л буцаана
   return { password, createdId: id };
 }
 
 export async function updateReader(id: string, _: FormState, formData: FormData): Promise<FormState> {
-  await requireRole("admin", "librarian");
+  const staff = await requireRole("admin", "librarian");
   await requireReader(id);
   const parsed = readerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(formData, fieldErrorsOf(parsed.error));
@@ -78,21 +80,25 @@ export async function updateReader(id: string, _: FormState, formData: FormData)
       email: data.email ?? placeholderEmail(data.cardNumber),
     })
     .where(eq(user.id, id));
+  await audit(staff, "user.update", `Уншигч ${data.name} (${data.cardNumber.toUpperCase()})`);
   revalidatePath("/staff/readers");
   revalidatePath(`/staff/readers/${id}`);
   return { success: "Хадгаллаа" };
 }
 
 export async function resetReaderPassword(id: string): Promise<FormState> {
-  await requireRole("admin", "librarian");
-  await requireReader(id);
-  return { password: await resetPassword(id) };
+  const staff = await requireRole("admin", "librarian");
+  const reader = await requireReader(id);
+  const password = await resetPassword(id);
+  await audit(staff, "user.password", `Уншигч ${reader.name}`);
+  return { password };
 }
 
 export async function setReaderActive(id: string, active: boolean): Promise<FormState> {
-  await requireRole("admin", "librarian");
-  await requireReader(id);
+  const staff = await requireRole("admin", "librarian");
+  const reader = await requireReader(id);
   await setActive(id, active);
+  await audit(staff, active ? "user.activate" : "user.deactivate", `Уншигч ${reader.name}`);
   revalidatePath("/staff/readers");
   revalidatePath(`/staff/readers/${id}`);
   return { success: active ? "Идэвхжүүллээ" : "Идэвхгүй болголоо" };

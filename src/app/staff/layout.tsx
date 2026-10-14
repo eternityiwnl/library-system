@@ -26,9 +26,12 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           <NavLink href="/staff/books">Номууд</NavLink>
           <NavLink href="/staff/categories">Ангилал</NavLink>
           <NavLink href="/staff/readers">Уншигчид</NavLink>
+          <NavLink href="/staff/reports">Тайлан</NavLink>
           {user.role === "admin" && (
             <>
               <NavLink href="/staff/users">Ажилтнууд</NavLink>
+              <NavLink href="/staff/reminders">Имэйл сануулга</NavLink>
+              <NavLink href="/staff/activity">Үйлдлийн бүртгэл</NavLink>
               <NavLink href="/staff/settings">Тохиргоо</NavLink>
             </>
           )}

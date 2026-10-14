@@ -10,7 +10,7 @@ export async function renewMyLoan(loanId: number): Promise<FormState> {
   const reader = await requireRole("reader");
   try {
     // readerId дамжуулснаар зөвхөн өөрийн зээлийг сунгана
-    const { dueDate } = await renew({ loanId, readerId: reader.id });
+    const { dueDate } = await renew({ loanId, readerId: reader.id, actor: reader });
     revalidatePath("/me");
     revalidatePath("/staff", "layout");
     return { success: `Сунгалаа. Шинэ хугацаа: ${formatDate(dueDate)}` };

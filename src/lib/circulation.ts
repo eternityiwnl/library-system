@@ -3,7 +3,8 @@ import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { bookCopies, books, fines, loans, settings, user } from "@/db/schema";
 import { isUniqueViolation } from "./db-errors";
-import { formatMoney } from "./format";
+import { audit, type Actor } from "./audit";
+import { formatDate, formatMoney } from "./format";
 import { COPY_STATUS_LABELS } from "./labels";
 
 // Бүх огнооны тооцоог DB дээр Улаанбаатарын цагаар хийнэ (Vercel сервер UTC дээр ажилладаг)
@@ -28,12 +29,12 @@ export function normalizeInventoryNumber(value: string) {
 
 const ALREADY_ON_LOAN = "Энэ хувь өөр уншигчид олгогдсон байна";
 
-export async function lend(input: { readerId: string; inventoryNumber: string; staffId: string }) {
+export async function lend(input: { readerId: string; inventoryNumber: string; actor: Actor }) {
   try {
     return await db.transaction(async (tx) => {
       // Уншигчийн мөрийг түгжинэ: нэг уншигчид зэрэг олгоход лимит давахгүй
       const [reader] = await tx
-        .select({ id: user.id, role: user.role, banned: user.banned })
+        .select({ id: user.id, role: user.role, banned: user.banned, name: user.name, card: user.username })
         .from(user)
         .where(eq(user.id, input.readerId))
         .for("update");
@@ -59,7 +60,7 @@ export async function lend(input: { readerId: string; inventoryNumber: string; s
       }
 
       const [copy] = await tx
-        .select({ id: bookCopies.id, status: bookCopies.status, title: books.title })
+        .select({ id: bookCopies.id, status: bookCopies.status, title: books.title, inventoryNumber: bookCopies.inventoryNumber })
         .from(bookCopies)
         .innerJoin(books, eq(books.id, bookCopies.bookId))
         .where(eq(bookCopies.inventoryNumber, normalizeInventoryNumber(input.inventoryNumber)));
@@ -79,10 +80,16 @@ export async function lend(input: { readerId: string; inventoryNumber: string; s
         .values({
           copyId: copy.id,
           readerId: reader.id,
-          issuedBy: input.staffId,
+          issuedBy: input.actor.id,
           dueDate: sql`${TODAY} + ${rules.loanPeriodDays}::integer`,
         })
         .returning({ id: loans.id, dueDate: loans.dueDate });
+      await audit(
+        input.actor,
+        "loan.issue",
+        `«${copy.title}» (${copy.inventoryNumber}) → ${reader.name} (${(reader.card ?? "").toUpperCase()}), ${formatDate(loan.dueDate)} хүртэл`,
+        tx,
+      );
       return { loanId: loan.id, dueDate: loan.dueDate, title: copy.title };
     });
   } catch (error) {
@@ -92,10 +99,16 @@ export async function lend(input: { readerId: string; inventoryNumber: string; s
   }
 }
 
-export async function returnCopy(input: { inventoryNumber: string; staffId: string }) {
+export async function returnCopy(input: { inventoryNumber: string; actor: Actor }) {
   return db.transaction(async (tx) => {
     const [active] = await tx
-      .select({ loanId: loans.id, readerId: loans.readerId, readerName: user.name, title: books.title })
+      .select({
+        loanId: loans.id,
+        readerId: loans.readerId,
+        readerName: user.name,
+        title: books.title,
+        inventoryNumber: bookCopies.inventoryNumber,
+      })
       .from(loans)
       .innerJoin(bookCopies, eq(bookCopies.id, loans.copyId))
       .innerJoin(books, eq(books.id, bookCopies.bookId))
@@ -108,7 +121,7 @@ export async function returnCopy(input: { inventoryNumber: string; staffId: stri
 
     const [closed] = await tx
       .update(loans)
-      .set({ returnedAt: sql`now()`, returnedTo: input.staffId })
+      .set({ returnedAt: sql`now()`, returnedTo: input.actor.id })
       .where(eq(loans.id, active.loanId))
       .returning({ daysLate: sql<number>`greatest(${TODAY} - ${loans.dueDate}, 0)`.mapWith(Number) });
 
@@ -122,23 +135,36 @@ export async function returnCopy(input: { inventoryNumber: string; staffId: stri
         amount: fine,
       });
     }
+    await audit(
+      input.actor,
+      "loan.return",
+      `«${active.title}» (${active.inventoryNumber}) ← ${active.readerName}` +
+        (closed.daysLate > 0 ? `, ${closed.daysLate} хоног хоцорсон${fine > 0 ? `, торгууль ${formatMoney(fine)}` : ""}` : ""),
+      tx,
+    );
     return { title: active.title, readerName: active.readerName, readerId: active.readerId, daysLate: closed.daysLate, fine };
   });
 }
 
 /** readerId өгвөл зөвхөн тухайн уншигчийн зээлийг сунгана (уншигч өөрөө сунгах үед) */
-export async function renew(input: { loanId: number; readerId?: string }) {
+export async function renew(input: { loanId: number; actor: Actor; readerId?: string }) {
   return db.transaction(async (tx) => {
     const [loan] = await tx
       .select({
         readerId: loans.readerId,
+        readerName: user.name,
+        title: books.title,
+        inventoryNumber: bookCopies.inventoryNumber,
         returnedAt: loans.returnedAt,
         renewalCount: loans.renewalCount,
         overdue: sql<boolean>`${loans.dueDate} < ${TODAY}`,
       })
       .from(loans)
+      .innerJoin(user, eq(user.id, loans.readerId))
+      .innerJoin(bookCopies, eq(bookCopies.id, loans.copyId))
+      .innerJoin(books, eq(books.id, bookCopies.bookId))
       .where(eq(loans.id, input.loanId))
-      .for("update");
+      .for("update", { of: loans });
     if (!loan || (input.readerId && loan.readerId !== input.readerId)) throw new CirculationError("Зээл олдсонгүй");
     if (loan.returnedAt) throw new CirculationError("Энэ ном аль хэдийн буцаагдсан");
     if (loan.overdue) throw new CirculationError("Хугацаа хэтэрсэн номыг сунгах боломжгүй — эхлээд буцаана уу");
@@ -157,6 +183,12 @@ export async function renew(input: { loanId: number; readerId?: string }) {
       })
       .where(eq(loans.id, input.loanId))
       .returning({ dueDate: loans.dueDate });
+    await audit(
+      input.actor,
+      "loan.renew",
+      `«${loan.title}» (${loan.inventoryNumber}) — ${loan.readerName}, шинэ хугацаа ${formatDate(updated.dueDate)}`,
+      tx,
+    );
     return { dueDate: updated.dueDate };
   });
 }
