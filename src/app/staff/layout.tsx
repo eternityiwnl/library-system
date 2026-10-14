@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions";
+import { ToastProvider } from "@/components/toast";
 import { requireRole } from "@/lib/session";
 import { NavLink } from "./nav-link";
 
@@ -19,10 +20,18 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           <NavLink href="/staff" exact>
             Хяналтын самбар
           </NavLink>
+          <NavLink href="/staff/circulation">Олголт / буцаалт</NavLink>
+          <NavLink href="/staff/loans">Зээлүүд</NavLink>
+          <NavLink href="/staff/fines">Торгууль</NavLink>
           <NavLink href="/staff/books">Номууд</NavLink>
           <NavLink href="/staff/categories">Ангилал</NavLink>
           <NavLink href="/staff/readers">Уншигчид</NavLink>
-          {user.role === "admin" && <NavLink href="/staff/users">Ажилтнууд</NavLink>}
+          {user.role === "admin" && (
+            <>
+              <NavLink href="/staff/users">Ажилтнууд</NavLink>
+              <NavLink href="/staff/settings">Тохиргоо</NavLink>
+            </>
+          )}
           <NavLink href="/password">Нууц үг солих</NavLink>
           <form action={signOut} className="md:mt-4">
             <button
@@ -34,7 +43,9 @@ export default async function StaffLayout({ children }: { children: ReactNode })
           </form>
         </nav>
       </aside>
-      <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
+        <ToastProvider>{children}</ToastProvider>
+      </main>
     </div>
   );
 }

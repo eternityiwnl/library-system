@@ -29,6 +29,13 @@
       "when": 1791959418972,
       "tag": "0003_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791959985297,
+      "tag": "0004_loans_fines",
+      "breakpoints": true
     }
   ]
 }

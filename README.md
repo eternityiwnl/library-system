@@ -64,8 +64,9 @@ npm run db:migrate
 
 0. Setup
 1. Login and users
-2. Catalog (categories, books, copies, Cyrillic search) ← current
+2. Catalog (categories, books, copies, Cyrillic search)
 3. Lending, returns, renewals, limits
 4. Fines and admin settings
+   ← done through here; next: 5
 5. Reader portal
 6. Reports, audit log, email reminders, launch

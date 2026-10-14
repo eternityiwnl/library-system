@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { bookCopies, books, categories } from "@/db/schema";
+import { bookCopies, books, categories, loans } from "@/db/schema";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
 import { containsPattern, listCategories } from "@/lib/catalog";
 import { requireRole } from "@/lib/session";
@@ -41,7 +41,9 @@ export default async function BooksPage({
         year: books.publishedYear,
         category: categories.name,
         copies: count(bookCopies.id),
-        activeCopies: sql<number>`count(${bookCopies.id}) filter (where ${bookCopies.status} = 'active')`.mapWith(Number),
+        // Олгох боломжтой = хэвийн төлөвтэй, одоо зээлэгдээгүй
+        available: sql<number>`count(${bookCopies.id}) filter (where ${bookCopies.status} = 'active' and not exists (
+          select 1 from ${loans} where ${loans.copyId} = ${bookCopies.id} and ${loans.returnedAt} is null))`.mapWith(Number),
       })
       .from(books)
       .innerJoin(categories, eq(categories.id, books.categoryId))
@@ -106,7 +108,7 @@ export default async function BooksPage({
               <th className="px-4 py-3 font-medium">Зохиогч</th>
               <th className="px-4 py-3 font-medium">Ангилал</th>
               <th className="px-4 py-3 font-medium">Он</th>
-              <th className="px-4 py-3 text-right font-medium">Хувь</th>
+              <th className="px-4 py-3 text-right font-medium" title="Олгох боломжтой / нийт">Байгаа / нийт</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -120,8 +122,8 @@ export default async function BooksPage({
                 <td className="px-4 py-3">{b.author}</td>
                 <td className="px-4 py-3 whitespace-nowrap">{b.category}</td>
                 <td className="px-4 py-3 tabular-nums">{b.year ?? "—"}</td>
-                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" title="Хэвийн / нийт">
-                  {b.activeCopies} / {b.copies}
+                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap" title="Олгох боломжтой / нийт">
+                  {b.available} / {b.copies}
                 </td>
               </tr>
             ))}

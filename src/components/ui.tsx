@@ -105,16 +105,25 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   );
 }
 
-export function Notice({ tone, children }: { tone: "error" | "success"; children: ReactNode }) {
-  const styles =
-    tone === "error"
-      ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
-      : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100";
+export function Notice({ tone, children }: { tone: "error" | "success" | "warning"; children: ReactNode }) {
+  const styles = {
+    error: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
+    warning: "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100",
+  }[tone];
   return (
     <div role={tone === "error" ? "alert" : "status"} className={`rounded-md border px-4 py-3 text-sm ${styles}`}>
       {children}
     </div>
   );
+}
+
+/** FormState-ийн error/warning/success-ийг харуулна */
+export function StateNotice({ state }: { state: { error?: string; warning?: string; success?: string } }) {
+  if (state.error) return <Notice tone="error">{state.error}</Notice>;
+  if (state.warning) return <Notice tone="warning">{state.warning}</Notice>;
+  if (state.success) return <Notice tone="success">{state.success}</Notice>;
+  return null;
 }
 
 export function PageHeader({ title, actions }: { title: string; actions?: ReactNode }) {

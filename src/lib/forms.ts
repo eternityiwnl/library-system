@@ -4,6 +4,8 @@ export type FormState = {
   error?: string;
   fieldErrors?: Record<string, string>;
   success?: string;
+  /** Амжилттай боловч анхаарах зүйлтэй (жишээ нь торгууль ногдсон) */
+  warning?: string;
   /** Нэг удаа харуулах түр нууц үг */
   password?: string;
   createdId?: string;

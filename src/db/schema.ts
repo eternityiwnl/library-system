@@ -1,5 +1,6 @@
 import {
   check,
+  date,
   index,
   integer,
   pgEnum,
@@ -11,6 +12,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { user } from "./auth-schema";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -108,6 +110,60 @@ export const settings = pgTable(
       sql`${t.loanPeriodDays} > 0 AND ${t.maxActiveLoans} > 0 AND ${t.maxRenewals} >= 0
         AND ${t.renewalDays} > 0 AND ${t.finePerDay} >= 0 AND ${t.maxUnpaidFine} >= 0`,
     ),
+  ],
+);
+
+// Ном гэрээр олголт. Буцаалт = returned_at бөглөгдөх; тусдаа хүснэгт хэрэггүй.
+export const loans = pgTable(
+  "loans",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    copyId: integer("copy_id")
+      .notNull()
+      .references(() => bookCopies.id, { onDelete: "restrict" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    issuedBy: text("issued_by").references(() => user.id, { onDelete: "set null" }),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).defaultNow().notNull(),
+    // Огноо (цаггүй): энэ өдрийн төгсгөл хүртэл буцааж болно, Улаанбаатарын цагаар
+    dueDate: date("due_date").notNull(),
+    renewalCount: smallint("renewal_count").default(0).notNull(),
+    returnedAt: timestamp("returned_at", { withTimezone: true }),
+    returnedTo: text("returned_to").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    // Нэг хувь нэг зэрэг зөвхөн нэг идэвхтэй зээлтэй байна — DB түвшинд баталгаажна
+    uniqueIndex("loans_one_active_per_copy_idx").on(t.copyId).where(sql`${t.returnedAt} IS NULL`),
+    index("loans_reader_idx").on(t.readerId),
+    index("loans_active_due_idx").on(t.dueDate).where(sql`${t.returnedAt} IS NULL`),
+  ],
+);
+
+export const fineStatus = pgEnum("fine_status", ["unpaid", "paid", "waived"]);
+
+// Хоцорсон буцаалтын торгууль — нэг зээлд нэг торгууль
+export const fines = pgTable(
+  "fines",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    loanId: integer("loan_id")
+      .notNull()
+      .unique()
+      .references(() => loans.id, { onDelete: "restrict" }),
+    readerId: text("reader_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    daysLate: smallint("days_late").notNull(),
+    amount: integer("amount").notNull(),
+    status: fineStatus("status").default("unpaid").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: text("resolved_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("fines_reader_idx").on(t.readerId),
+    check("fines_positive", sql`${t.amount} > 0 AND ${t.daysLate} > 0`),
   ],
 );
 

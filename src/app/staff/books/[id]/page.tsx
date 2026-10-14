@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { bookCopies, books } from "@/db/schema";
+import { bookCopies, books, loans, user } from "@/db/schema";
 import { Card, Notice, PageHeader } from "@/components/ui";
 import { listCategories } from "@/lib/catalog";
 import { requireRole } from "@/lib/session";
@@ -24,8 +24,18 @@ export default async function BookPage({
   const [[book], copies, categories] = await Promise.all([
     db.select().from(books).where(eq(books.id, id)).limit(1),
     db
-      .select({ id: bookCopies.id, inventoryNumber: bookCopies.inventoryNumber, status: bookCopies.status, note: bookCopies.note })
+      .select({
+        id: bookCopies.id,
+        inventoryNumber: bookCopies.inventoryNumber,
+        status: bookCopies.status,
+        note: bookCopies.note,
+        loanReaderId: loans.readerId,
+        loanReaderName: user.name,
+        loanDueDate: loans.dueDate,
+      })
       .from(bookCopies)
+      .leftJoin(loans, and(eq(loans.copyId, bookCopies.id), isNull(loans.returnedAt)))
+      .leftJoin(user, eq(user.id, loans.readerId))
       .where(eq(bookCopies.bookId, id))
       .orderBy(asc(bookCopies.inventoryNumber)),
     listCategories(),
@@ -38,7 +48,12 @@ export default async function BookPage({
       {created && <Notice tone="success">Номыг бүртгэлээ.</Notice>}
 
       <Card>
-        <h2 className="mb-4 font-semibold">Хувиуд ({copies.length})</h2>
+        <h2 className="mb-4 font-semibold">
+          Хувиуд ({copies.length}) ·{" "}
+          <span className="font-normal text-zinc-500">
+            {copies.filter((c) => c.status === "active" && !c.loanReaderId).length} олгох боломжтой
+          </span>
+        </h2>
         {copies.length > 0 && (
           <div className="-mx-5 mb-4 overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -47,6 +62,7 @@ export default async function BookPage({
                   <th className="px-4 py-2 font-medium">Бүртгэлийн №</th>
                   <th className="px-4 py-2 font-medium">Төлөв</th>
                   <th className="px-4 py-2 font-medium">Тэмдэглэл</th>
+                  <th className="px-4 py-2 font-medium">Зээл</th>
                   <th className="px-4 py-2" />
                 </tr>
               </thead>

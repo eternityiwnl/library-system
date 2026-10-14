@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { Button } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 import type { FormState } from "@/lib/forms";
 import { COPY_STATUS_LABELS, type CopyStatus } from "@/lib/labels";
 import { addCopies, deleteBook, deleteCopy, updateCopy } from "../actions";
@@ -39,7 +41,15 @@ export function CopyRow({
   copy,
 }: {
   bookId: number;
-  copy: { id: number; inventoryNumber: string; status: CopyStatus; note: string | null };
+  copy: {
+    id: number;
+    inventoryNumber: string;
+    status: CopyStatus;
+    note: string | null;
+    loanReaderId: string | null;
+    loanReaderName: string | null;
+    loanDueDate: string | null;
+  };
 }) {
   const [state, action, pending] = useActionState(updateCopy.bind(null, bookId, copy.id), {});
   const [deleteState, setDeleteState] = useState<FormState>({});
@@ -76,6 +86,18 @@ export function CopyRow({
           className={`${controlClass} w-full min-w-40`}
         />
       </td>
+      <td className="px-4 py-3 text-sm whitespace-nowrap">
+        {copy.loanReaderId ? (
+          <>
+            <Link href={`/staff/readers/${copy.loanReaderId}`} className="hover:underline">
+              {copy.loanReaderName}
+            </Link>
+            <span className="block text-xs text-zinc-500">{formatDate(copy.loanDueDate)} хүртэл</span>
+          </>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        )}
+      </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 whitespace-nowrap">
           <Button form={formId} type="submit" variant="secondary" disabled={pending} className="h-9">
@@ -84,7 +106,8 @@ export function CopyRow({
           <Button
             type="button"
             variant="secondary"
-            disabled={deleting}
+            disabled={deleting || Boolean(copy.loanReaderId)}
+            title={copy.loanReaderId ? "Олгогдсон хувийг устгах боломжгүй" : undefined}
             className="h-9"
             onClick={() => {
               if (!window.confirm(`${copy.inventoryNumber} хувийг устгах уу?`)) return;
