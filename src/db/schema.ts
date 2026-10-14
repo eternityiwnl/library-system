@@ -98,3 +98,5 @@ export const settings = pgTable(
     ),
   ],
 );
+
+export * from "./auth-schema";
