@@ -79,7 +79,7 @@ export default async function CatalogBookPage({ params }: { params: Promise<{ id
         <AvailabilityBadge available={stock.available} copies={stock.copies} />
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {stock.available > 0
-            ? "Номын санд ирж, картаа үзүүлэн зээлж авна уу."
+            ? "Номын санд ирж зээлж авна уу."
             : nextReturn?.dueDate
               ? `Хамгийн эрт ${formatDate(nextReturn.dueDate)}-нд буцаагдах төлөвтэй.`
               : stock.copies > 0

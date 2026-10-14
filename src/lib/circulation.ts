@@ -5,6 +5,7 @@ import { bookCopies, books, fines, loans, settings, user } from "@/db/schema";
 import { isUniqueViolation } from "./db-errors";
 import { audit, type Actor } from "./audit";
 import { formatDate, formatMoney } from "./format";
+import { formatPhone } from "./phone";
 import { COPY_STATUS_LABELS } from "./labels";
 
 // Бүх огнооны тооцоог DB дээр Улаанбаатарын цагаар хийнэ (Vercel сервер UTC дээр ажилладаг)
@@ -34,7 +35,7 @@ export async function lend(input: { readerId: string; inventoryNumber: string; a
     return await db.transaction(async (tx) => {
       // Уншигчийн мөрийг түгжинэ: нэг уншигчид зэрэг олгоход лимит давахгүй
       const [reader] = await tx
-        .select({ id: user.id, role: user.role, banned: user.banned, name: user.name, card: user.username })
+        .select({ id: user.id, role: user.role, banned: user.banned, name: user.name, phone: user.phone })
         .from(user)
         .where(eq(user.id, input.readerId))
         .for("update");
@@ -87,7 +88,7 @@ export async function lend(input: { readerId: string; inventoryNumber: string; a
       await audit(
         input.actor,
         "loan.issue",
-        `«${copy.title}» (${copy.inventoryNumber}) → ${reader.name} (${(reader.card ?? "").toUpperCase()}), ${formatDate(loan.dueDate)} хүртэл`,
+        `«${copy.title}» (${copy.inventoryNumber}) → ${reader.name} (${formatPhone(reader.phone)}), ${formatDate(loan.dueDate)} хүртэл`,
         tx,
       );
       return { loanId: loan.id, dueDate: loan.dueDate, title: copy.title };
@@ -211,7 +212,7 @@ export function selectLoans() {
       inventoryNumber: bookCopies.inventoryNumber,
       readerId: loans.readerId,
       readerName: user.name,
-      cardNumber: user.username,
+      readerPhone: user.phone,
       issuedAt: loans.issuedAt,
       dueDate: loans.dueDate,
       returnedAt: loans.returnedAt,

@@ -1,5 +1,5 @@
 // Better Auth-ийн хүснэгтүүд. `npx auth@1.7.7 generate`-ээр үүсгэсэн; гараар нэмсэн:
-// role-ийн default/NOT NULL/check (ROLES-тай таарах ёстой).
+// role-ийн default/NOT NULL/check (ROLES-тай таарах ёстой), утасны unique index.
 import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
@@ -10,6 +10,7 @@ import {
   integer,
   index,
   check,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable(
@@ -33,7 +34,11 @@ export const user = pgTable(
     phone: text("phone"),
     mustChangePassword: boolean("must_change_password").default(false).notNull(),
   },
-  (table) => [check("user_role_check", sql`${table.role} IN ('admin', 'librarian', 'reader')`)],
+  (table) => [
+    check("user_role_check", sql`${table.role} IN ('admin', 'librarian', 'reader')`),
+    // Утас = уншигчийн нэвтрэх нэр; хүн бүрийнх давхардахгүй
+    uniqueIndex("user_phone_unique_idx").on(table.phone).where(sql`${table.phone} IS NOT NULL`),
+  ],
 );
 
 export const session = pgTable(

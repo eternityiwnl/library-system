@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Field, Notice } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
+import { normalizePhone } from "@/lib/phone";
 
 // Нэвтрэлтийг Server Action биш, /api/auth-аар дамжуулна — тэнд оролдлогын хязгаар (rate limit) ажиллана
 export function LoginForm() {
@@ -17,11 +18,19 @@ export function LoginForm() {
     const identifier = String(form.get("identifier") ?? "").trim();
     const password = String(form.get("password") ?? "");
 
+    // Имэйл биш бол утасны дугаар: "9911 2233", "+976 99112233" → "99112233"
+    const isEmail = identifier.includes("@");
+    const phone = isEmail ? null : normalizePhone(identifier);
+    if (!isEmail && !phone) {
+      setError("Утасны дугаараа 8 оронтойгоор оруулна уу.");
+      return;
+    }
+
     setPending(true);
     setError("");
-    const { error } = identifier.includes("@")
+    const { error } = isEmail
       ? await authClient.signIn.email({ email: identifier, password })
-      : await authClient.signIn.username({ username: identifier, password });
+      : await authClient.signIn.username({ username: phone!, password });
 
     if (error) {
       setPending(false);
@@ -42,8 +51,9 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {error && <Notice tone="error">{error}</Notice>}
       <Field
-        label="Картын дугаар эсвэл имэйл"
+        label="Утасны дугаар эсвэл имэйл"
         name="identifier"
+        placeholder="9911 2233"
         autoComplete="username"
         autoCapitalize="none"
         required

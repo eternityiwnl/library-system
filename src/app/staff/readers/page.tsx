@@ -6,6 +6,7 @@ import { Badge, Card, LinkButton, PageHeader } from "@/components/ui";
 import { requireRole } from "@/lib/session";
 import { realEmail } from "@/lib/users";
 import { containsPattern } from "@/lib/catalog";
+import { formatPhone } from "@/lib/phone";
 
 const PAGE_SIZE = 25;
 
@@ -23,7 +24,12 @@ export default async function ReadersPage({
   const where = and(
     eq(user.role, "reader"),
     query
-      ? or(ilike(user.name, pattern), ilike(user.username, pattern), ilike(user.phone, pattern), ilike(user.email, pattern))
+      ? or(
+          ilike(user.name, pattern),
+          // "9911 2233" гэж бичсэн ч олдоно
+          ilike(user.phone, containsPattern(query.replace(/\D/g, "") || query)),
+          ilike(user.email, pattern),
+        )
       : undefined,
   );
 
@@ -32,7 +38,6 @@ export default async function ReadersPage({
       .select({
         id: user.id,
         name: user.name,
-        username: user.username,
         phone: user.phone,
         email: user.email,
         banned: user.banned,
@@ -55,7 +60,7 @@ export default async function ReadersPage({
         <input
           name="q"
           defaultValue={query}
-          placeholder="Нэр, картын дугаар, утас, имэйлээр хайх"
+          placeholder="Нэр, утас, имэйлээр хайх"
           aria-label="Уншигч хайх"
           className="h-10 w-full max-w-md rounded-md border border-zinc-300 bg-white px-3 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900 sm:text-sm"
         />
@@ -71,7 +76,6 @@ export default async function ReadersPage({
         <table className="w-full text-left text-sm">
           <thead className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
             <tr>
-              <th className="px-4 py-3 font-medium">Картын дугаар</th>
               <th className="px-4 py-3 font-medium">Овог нэр</th>
               <th className="px-4 py-3 font-medium">Утас</th>
               <th className="px-4 py-3 font-medium">Имэйл</th>
@@ -81,13 +85,12 @@ export default async function ReadersPage({
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {rows.map((r) => (
               <tr key={r.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <td className="px-4 py-3 font-mono whitespace-nowrap">
-                  <Link href={`/staff/readers/${r.id}`} className="text-emerald-700 hover:underline dark:text-emerald-400">
-                    {(r.username ?? "").toUpperCase()}
+                <td className="px-4 py-3">
+                  <Link href={`/staff/readers/${r.id}`} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+                    {r.name}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{r.name}</td>
-                <td className="px-4 py-3 whitespace-nowrap">{r.phone ?? "—"}</td>
+                <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatPhone(r.phone)}</td>
                 <td className="px-4 py-3">{realEmail(r.email) ?? "—"}</td>
                 <td className="px-4 py-3">
                   {r.banned ? <Badge tone="red">Идэвхгүй</Badge> : <Badge tone="green">Идэвхтэй</Badge>}
@@ -96,7 +99,7 @@ export default async function ReadersPage({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-zinc-500">
+                <td colSpan={4} className="px-4 py-10 text-center text-zinc-500">
                   {query ? "Илэрц олдсонгүй" : "Одоогоор уншигч бүртгээгүй байна"}
                 </td>
               </tr>

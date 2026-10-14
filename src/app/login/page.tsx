@@ -14,7 +14,7 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm">
         <h1 className="mb-1 text-2xl font-semibold tracking-tight">Нэвтрэх</h1>
         <p className="mb-6 text-sm text-zinc-500">
-          Уншигч бол картын дугаараа, ажилтан бол имэйлээ оруулна уу.
+          Уншигч бол утасны дугаараа, ажилтан бол имэйлээ оруулна уу.
         </p>
         <LoginForm />
       </div>

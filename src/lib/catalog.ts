@@ -9,7 +9,7 @@ export function listCategories() {
 
 /** LIKE-ийн тусгай тэмдэгтийг escape хийсэн '%хайлт%' загвар */
 export function containsPattern(query: string) {
-  return `%${query.replace(/[\%_]/g, "\$&")}%`;
+  return `%${query.replace(/[\\%_]/g, "\\$&")}%`;
 }
 
 /** Номын хайлт — ажилтны жагсаалт болон нийтийн каталог хоёуланд */

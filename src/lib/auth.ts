@@ -56,11 +56,11 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    // username = уншигчийн картын дугаар
+    // username = уншигчийн утасны дугаар (8 оронтой цифр, normalizePhone-оор цэвэрлэсэн)
     username({
-      minUsernameLength: 1,
-      maxUsernameLength: 32,
-      usernameValidator: (value) => /^[A-Za-z0-9-]+$/.test(value),
+      minUsernameLength: 8,
+      maxUsernameLength: 8,
+      usernameValidator: (value) => /^\d{8}$/.test(value),
       immutableUsername: true,
       displayUsername: false,
     }),

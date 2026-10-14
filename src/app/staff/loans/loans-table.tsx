@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { LoanActions } from "../circulation/forms";
 
 export type LoanRow = {
@@ -10,7 +11,7 @@ export type LoanRow = {
   inventoryNumber: string;
   readerId?: string;
   readerName?: string;
-  cardNumber?: string | null;
+  readerPhone?: string | null;
   issuedAt: Date;
   dueDate: string;
   returnedAt?: Date | null;
@@ -67,7 +68,7 @@ export function LoansTable({
                   <Link href={`/staff/readers/${r.readerId}`} className="hover:underline">
                     {r.readerName}
                   </Link>
-                  {r.cardNumber && <span className="ml-2 font-mono text-xs text-zinc-500">{r.cardNumber.toUpperCase()}</span>}
+                  {r.readerPhone && <span className="ml-2 text-xs text-zinc-500 tabular-nums">{formatPhone(r.readerPhone)}</span>}
                 </td>
               )}
               <td className="px-4 py-3 whitespace-nowrap">{formatDate(r.issuedAt)}</td>

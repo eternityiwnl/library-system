@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { Button, Field, LinkButton, Notice, PasswordReveal } from "@/components/ui";
 import type { FormState } from "@/lib/forms";
 
-type Defaults = { name: string; cardNumber: string; phone: string; email: string };
+type Defaults = { name: string; phone: string; email: string };
 
 export function ReaderForm({
   action,
@@ -57,15 +57,16 @@ function ReaderFormInner({
       {state.success && <Notice tone="success">{state.success}</Notice>}
       <Field label="Овог нэр" name="name" required defaultValue={v.name ?? defaults?.name} error={errors.name} />
       <Field
-        label="Картын дугаар"
-        name="cardNumber"
+        label="Утасны дугаар"
+        name="phone"
+        type="tel"
+        inputMode="tel"
         required
-        autoCapitalize="characters"
-        defaultValue={v.cardNumber ?? defaults?.cardNumber}
+        placeholder="9911 2233"
+        defaultValue={v.phone ?? defaults?.phone}
         hint="Уншигч үүгээр нэвтэрнэ"
-        error={errors.cardNumber}
+        error={errors.phone}
       />
-      <Field label="Утас" name="phone" type="tel" defaultValue={v.phone ?? defaults?.phone} error={errors.phone} />
       <Field
         label="Имэйл"
         name="email"

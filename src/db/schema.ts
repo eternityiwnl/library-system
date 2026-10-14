@@ -1,5 +1,6 @@
 import {
   check,
+  customType,
   date,
   index,
   integer,
@@ -44,6 +45,8 @@ export const books = pgTable(
     publisher: text("publisher"),
     publishedYear: smallint("published_year"),
     description: text("description"),
+    // Хавтасны зураг солих бүрт нэмэгдэнэ → /covers/:id?v=N (CDN-д мөнхөд кэшлэнэ). null = зураггүй
+    coverVersion: integer("cover_version"),
     ...timestamps,
   },
   (t) => [
@@ -53,6 +56,19 @@ export const books = pgTable(
     index("books_author_trgm_idx").using("gin", t.author.op("gin_trgm_ops")),
   ],
 );
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
+
+// Номын хавтасны зураг (хөтөч дээр WebP болгож жижигрүүлсэн, ~50–150KB).
+// Тусдаа хүснэгтэд — номын жагсаалт татахад зургийн өгөгдөл хамт ирэхгүй.
+export const bookCovers = pgTable("book_covers", {
+  bookId: integer("book_id")
+    .primaryKey()
+    .references(() => books.id, { onDelete: "cascade" }),
+  mime: text("mime").notNull(),
+  data: bytea("data").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // Номын хувийн төлөв. "Олгосон" төлөв энд байхгүй — тэр нь буцаагдаагүй
 // loans мөрөөс тодорхойлогдоно, тэгснээр хоёр эх сурвалж зөрөх боломжгүй.

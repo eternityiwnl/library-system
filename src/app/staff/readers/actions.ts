@@ -7,11 +7,12 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { fieldErrorsOf, fields, invalid, type FormState } from "@/lib/forms";
 import { audit } from "@/lib/audit";
+import { formatPhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import {
   createAccount,
   findUser,
-  isCardNumberTaken,
+  isPhoneTaken,
   isEmailTaken,
   placeholderEmail,
   resetPassword,
@@ -20,8 +21,7 @@ import {
 
 const readerSchema = z.object({
   name: fields.name,
-  cardNumber: fields.cardNumber,
-  phone: fields.phone,
+  phone: fields.loginPhone,
   email: fields.optionalEmail,
 });
 
@@ -34,7 +34,7 @@ async function requireReader(id: string) {
 
 async function uniquenessErrors(data: z.infer<typeof readerSchema>, exceptUserId?: string) {
   const errors: Record<string, string> = {};
-  if (await isCardNumberTaken(data.cardNumber, exceptUserId)) errors.cardNumber = "Энэ картын дугаар бүртгэлтэй байна";
+  if (await isPhoneTaken(data.phone, exceptUserId)) errors.phone = "Энэ утасны дугаар бүртгэлтэй байна";
   if (data.email && (await isEmailTaken(data.email, exceptUserId))) errors.email = "Энэ имэйл бүртгэлтэй байна";
   return Object.keys(errors).length ? errors : null;
 }
@@ -50,12 +50,12 @@ export async function createReader(_: FormState, formData: FormData): Promise<Fo
 
   const { id, password } = await createAccount({
     name: data.name,
-    email: data.email ?? placeholderEmail(data.cardNumber),
+    email: data.email ?? placeholderEmail(data.phone),
     role: "reader",
     phone: data.phone,
-    cardNumber: data.cardNumber,
+    loginByPhone: true,
   });
-  await audit(staff, "user.create", `Уншигч ${data.name} (${data.cardNumber.toUpperCase()})`);
+  await audit(staff, "user.create", `Уншигч ${data.name} (${formatPhone(data.phone)})`);
   revalidatePath("/staff/readers");
   // Нууц үгийг URL-д хийхгүй (хөтчийн түүх, серверийн лог-д үлдэнэ) — хариунд л буцаана
   return { password, createdId: id };
@@ -75,12 +75,13 @@ export async function updateReader(id: string, _: FormState, formData: FormData)
     .update(user)
     .set({
       name: data.name,
-      username: data.cardNumber.toLowerCase(),
+      // Утас = нэвтрэх нэр, хоёуланг нь хамт шинэчилнэ
+      username: data.phone,
       phone: data.phone,
-      email: data.email ?? placeholderEmail(data.cardNumber),
+      email: data.email ?? placeholderEmail(data.phone),
     })
     .where(eq(user.id, id));
-  await audit(staff, "user.update", `Уншигч ${data.name} (${data.cardNumber.toUpperCase()})`);
+  await audit(staff, "user.update", `Уншигч ${data.name} (${formatPhone(data.phone)})`);
   revalidatePath("/staff/readers");
   revalidatePath(`/staff/readers/${id}`);
   return { success: "Хадгаллаа" };

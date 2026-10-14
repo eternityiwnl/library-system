@@ -6,6 +6,7 @@ import { bookCopies, books, fines, loans } from "@/db/schema";
 import { Badge, Card, Notice } from "@/components/ui";
 import { activeLoansOf, getSettings, selectLoans } from "@/lib/circulation";
 import { formatDate, formatMoney } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { RenewButton } from "./renew-button";
 
@@ -40,7 +41,7 @@ export default async function ReaderHome() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Сайн байна уу, {reader.name}</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Картын дугаар <span className="font-mono text-zinc-900 dark:text-zinc-100">{(reader.username ?? "").toUpperCase()}</span>
+          Утас <span className="text-zinc-900 tabular-nums dark:text-zinc-100">{formatPhone(reader.phone)}</span>
           {" · "}
           <Link href="/password" className="hover:underline">
             Нууц үг солих

@@ -6,6 +6,7 @@ import { bookCopies, books, fines, loans, user } from "@/db/schema";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { containsPattern } from "@/lib/catalog";
 import { formatDate, formatMoney } from "@/lib/format";
+import { formatPhone, normalizePhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { FineActions } from "./fine-actions";
 
@@ -35,7 +36,7 @@ export default async function FinesPage({
   const where = and(
     tab === "all" ? undefined : eq(fines.status, tab),
     query
-      ? or(ilike(reader.name, pattern), eq(reader.username, query.toLowerCase()), ilike(books.title, pattern))
+      ? or(ilike(reader.name, pattern), eq(reader.phone, normalizePhone(query) ?? query), ilike(books.title, pattern))
       : undefined,
   );
   const [rows, [{ total, sum }]] = await Promise.all([
@@ -50,7 +51,7 @@ export default async function FinesPage({
         resolverName: resolver.name,
         readerId: reader.id,
         readerName: reader.name,
-        cardNumber: reader.username,
+        readerPhone: reader.phone,
         title: books.title,
       })
       .from(fines)
@@ -103,7 +104,7 @@ export default async function FinesPage({
         <input
           name="q"
           defaultValue={query}
-          placeholder="Уншигчийн нэр, картын дугаар, ном"
+          placeholder="Уншигчийн нэр, утас, ном"
           aria-label="Торгууль хайх"
           className="h-10 w-full max-w-md rounded-md border border-zinc-300 bg-white px-3 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900 sm:text-sm"
         />
@@ -139,7 +140,7 @@ export default async function FinesPage({
                   <Link href={`/staff/readers/${f.readerId}`} className="hover:underline">
                     {f.readerName}
                   </Link>
-                  <span className="ml-2 font-mono text-xs text-zinc-500">{(f.cardNumber ?? "").toUpperCase()}</span>
+                  <span className="ml-2 text-xs text-zinc-500 tabular-nums">{formatPhone(f.readerPhone)}</span>
                 </td>
                 <td className="px-4 py-3">{f.title}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{f.daysLate} хоног</td>

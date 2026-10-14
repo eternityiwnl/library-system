@@ -101,10 +101,22 @@ async function clear(client: PoolClient) {
     const { rowCount } = await client.query(`DELETE FROM "${table}" WHERE ${column}${cast} = ANY($1)`, [list]);
     return rowCount ?? 0;
   };
+  // Демо ном/уншигч дээр хожим хийгдсэн олголт, торгууль (жишээ нь танилцуулгын үеэр)
+  // демо мөрийг устгахад саад болно — тэдгээрийг хамт устгана.
+  const demoUsers = await ids("user");
+  const demoCopies = await ids("book_copies");
+  const { rows: attached } = await client.query(
+    "SELECT id FROM loans WHERE reader_id = ANY($1) OR copy_id::text = ANY($2)",
+    [demoUsers, demoCopies],
+  );
+  const attachedLoans = attached.map((r) => r.id);
+  await client.query("DELETE FROM fines WHERE loan_id = ANY($1) OR reader_id = ANY($2)", [attachedLoans, demoUsers]);
+  await client.query("DELETE FROM loans WHERE id = ANY($1)", [attachedLoans]);
+
   const result = {
     audit: await del("audit_log", "id", "::text"),
     fines: await del("fines", "id", "::text"),
-    loans: await del("loans", "id", "::text"),
+    loans: attachedLoans.length,
     copies: await del("book_copies", "id", "::text"),
     books: await del("books", "id", "::text"),
     categories: await del("categories", "id", "::text"),
@@ -156,27 +168,32 @@ async function seedData(client: PoolClient) {
   track("user", librarianId);
   credentials.push(`Номын санч   имэйл: demo-librarian@example.com   нууц үг: ${librarianPassword}`);
 
-  const readers: { id: string; name: string; card: string }[] = [];
+  const readers: { id: string; name: string; phone: string }[] = [];
   for (const [i, name] of READER_NAMES.entries()) {
     const id = randomUUID();
-    const card = `d-${String(i + 1).padStart(4, "0")}`;
+    // Демо утас: 8800 0001 … — уншигчийн нэвтрэх нэр
+    const phone = `8800${String(i + 1).padStart(4, "0")}`;
+    if ((await client.query('SELECT 1 FROM "user" WHERE phone = $1 OR username = $1', [phone])).rowCount) {
+      throw new Error(`${phone} утас аль хэдийн бүртгэлтэй — демо уншигч үүсгэх боломжгүй`);
+    }
     // Эхний 8 уншигч имэйлтэй — сануулгын демо-д хэрэгтэй
-    const email = i < 8 ? `demo-reader-${i + 1}@example.com` : `${card}@no-email.invalid`;
+    const email = i < 8 ? `demo-reader-${i + 1}@example.com` : `${phone}@no-email.invalid`;
     await client.query(
-      `INSERT INTO "user" (id, name, email, email_verified, role, username, created_at, updated_at)
-       VALUES ($1, $2, $3, false, 'reader', $4, $5, now())`,
-      [id, name, email, card, at(-int(200, 380))],
+      `INSERT INTO "user" (id, name, email, email_verified, role, username, phone, created_at, updated_at)
+       VALUES ($1, $2, $3, false, 'reader', $4, $4, $5, now())`,
+      [id, name, email, phone, at(-int(200, 380))],
     );
     track("user", id);
-    readers.push({ id, name, card });
+    readers.push({ id, name, phone });
   }
+  const shownPhone = (p: string) => `${p.slice(0, 4)} ${p.slice(4)}`;
   const readerPassword = password();
   await client.query(
     `INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at)
      VALUES ($1, $2, 'credential', $2, $3, now(), now())`,
     [randomUUID(), readers[0].id, await hashPassword(readerPassword)],
   );
-  credentials.push(`Уншигч       картын дугаар: D-0001   нууц үг: ${readerPassword}`);
+  credentials.push(`Уншигч       утас: 8800 0001   нууц үг: ${readerPassword}`);
 
   // Каталог
   const copies: { id: number; title: string; inventory: string }[] = [];
@@ -241,7 +258,7 @@ async function seedData(client: PoolClient) {
           [copy.id, holder.id, librarianId, at(issued), day(dueDay), renewed ? 1 : 0],
         );
         track("loans", loan.id);
-        audits.push([at(issued), "loan.issue", `«${copy.title}» (${copy.inventory}) → ${holder.name} (${holder.card.toUpperCase()})`, librarianId]);
+        audits.push([at(issued), "loan.issue", `«${copy.title}» (${copy.inventory}) → ${holder.name} (${shownPhone(holder.phone)})`, librarianId]);
         loanCount++;
         break;
       }
@@ -253,7 +270,7 @@ async function seedData(client: PoolClient) {
       );
       track("loans", loan.id);
       loanCount++;
-      audits.push([at(issued), "loan.issue", `«${copy.title}» (${copy.inventory}) → ${reader.name} (${reader.card.toUpperCase()})`, librarianId]);
+      audits.push([at(issued), "loan.issue", `«${copy.title}» (${copy.inventory}) → ${reader.name} (${shownPhone(reader.phone)})`, librarianId]);
       audits.push([at(returned), "loan.return", `«${copy.title}» (${copy.inventory}) ← ${reader.name}${late ? `, ${late} хоног хоцорсон` : ""}`, librarianId]);
 
       if (late) {

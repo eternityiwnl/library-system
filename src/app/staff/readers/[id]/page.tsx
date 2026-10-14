@@ -10,6 +10,7 @@ import { AccountActions } from "../../account-actions";
 import { LoansTable } from "../../loans/loans-table";
 import { resetReaderPassword, setReaderActive, updateReader } from "../actions";
 import { ReaderForm } from "../reader-form";
+import { formatPhone } from "@/lib/phone";
 
 export default async function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole("admin", "librarian");
@@ -26,7 +27,6 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
     unpaidFineTotal(reader.id),
   ]);
   const active = !reader.banned;
-  const cardNumber = (reader.username ?? "").toUpperCase();
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
@@ -37,7 +37,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
             {active ? <Badge tone="green">Идэвхтэй</Badge> : <Badge tone="red">Идэвхгүй</Badge>}
             {unpaid > 0 && <Badge tone="red">Төлөгдөөгүй торгууль {formatMoney(unpaid)}</Badge>}
             {active && (
-              <LinkButton href={`/staff/circulation?reader=${encodeURIComponent(cardNumber)}`}>Ном олгох</LinkButton>
+              <LinkButton href={`/staff/circulation?reader=${reader.username ?? reader.phone ?? ""}`}>Ном олгох</LinkButton>
             )}
           </>
         }
@@ -63,8 +63,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
             submitLabel="Хадгалах"
             defaults={{
               name: reader.name,
-              cardNumber,
-              phone: reader.phone ?? "",
+              phone: reader.phone ? formatPhone(reader.phone) : "",
               email: realEmail(reader.email) ?? "",
             }}
           />

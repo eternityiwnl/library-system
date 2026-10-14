@@ -5,6 +5,7 @@ import { bookCopies, books, categories, fines, loans, user } from "@/db/schema";
 import { Card, PageHeader } from "@/components/ui";
 import { TODAY } from "@/lib/circulation";
 import { formatMoney } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { MonthlyColumns, RankedBars } from "./charts";
 
@@ -57,7 +58,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         .orderBy(desc(count()), books.title)
         .limit(10),
       db
-        .select({ id: user.id, name: user.name, card: user.username, n: count() })
+        .select({ id: user.id, name: user.name, phone: user.phone, n: count() })
         .from(loans)
         .innerJoin(user, eq(user.id, loans.readerId))
         .where(issuedInRange)
@@ -125,7 +126,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <Card>
           <h2 className="mb-4 font-semibold">Идэвхтэй уншигч</h2>
           <RankedBars
-            rows={topReaders.map((r) => ({ label: r.name, sublabel: (r.card ?? "").toUpperCase(), value: r.n }))}
+            rows={topReaders.map((r) => ({ label: r.name, sublabel: formatPhone(r.phone), value: r.n }))}
             unit="ном"
           />
         </Card>

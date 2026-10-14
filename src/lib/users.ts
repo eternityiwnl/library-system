@@ -1,6 +1,6 @@
 import "server-only";
 import { randomInt } from "node:crypto";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { auth, type Role } from "./auth";
@@ -9,8 +9,8 @@ import { auth, type Role } from "./auth";
 // .invalid домэйн нь стандартаар хэзээ ч бодит хаяг болохгүй.
 const PLACEHOLDER_EMAIL_DOMAIN = "no-email.invalid";
 
-export function placeholderEmail(cardNumber: string) {
-  return `${cardNumber.toLowerCase()}@${PLACEHOLDER_EMAIL_DOMAIN}`;
+export function placeholderEmail(phone: string) {
+  return `${phone}@${PLACEHOLDER_EMAIL_DOMAIN}`;
 }
 
 export function realEmail(email: string) {
@@ -39,11 +39,10 @@ export async function isEmailTaken(email: string, exceptUserId?: string) {
   return Boolean(row);
 }
 
-export async function isCardNumberTaken(cardNumber: string, exceptUserId?: string) {
-  const username = cardNumber.toLowerCase();
-  const where = exceptUserId
-    ? and(eq(user.username, username), ne(user.id, exceptUserId))
-    : eq(user.username, username);
+/** Утас нэвтрэх нэр (username) эсвэл утасны баганад аль хэдийн байгаа эсэх */
+export async function isPhoneTaken(phone: string, exceptUserId?: string) {
+  const taken = or(eq(user.username, phone), eq(user.phone, phone));
+  const where = exceptUserId ? and(taken, ne(user.id, exceptUserId)) : taken;
   const [row] = await db.select({ id: user.id }).from(user).where(where).limit(1);
   return Boolean(row);
 }
@@ -54,7 +53,8 @@ export async function createAccount(input: {
   email: string;
   role: Role;
   phone: string | null;
-  cardNumber: string | null;
+  /** Уншигчид: утас нь нэвтрэх нэр болно */
+  loginByPhone: boolean;
 }) {
   const password = generatePassword();
   // Headers дамжуулахгүй = серверийн итгэмжлэгдсэн дуудлага. Эрхийг дуудагч шалгасан байх ёстой.
@@ -68,7 +68,7 @@ export async function createAccount(input: {
       data: {
         phone: input.phone,
         mustChangePassword: true,
-        ...(input.cardNumber ? { username: input.cardNumber.toLowerCase() } : {}),
+        ...(input.loginByPhone && input.phone ? { username: input.phone } : {}),
       },
     },
   });

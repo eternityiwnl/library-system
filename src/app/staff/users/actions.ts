@@ -8,7 +8,7 @@ import { user } from "@/db/schema";
 import { fieldErrorsOf, fields, invalid, type FormState } from "@/lib/forms";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
-import { createAccount, findUser, isEmailTaken, resetPassword, setActive } from "@/lib/users";
+import { createAccount, findUser, isEmailTaken, isPhoneTaken, resetPassword, setActive } from "@/lib/users";
 
 const staffSchema = z.object({
   name: fields.name,
@@ -30,8 +30,9 @@ export async function createStaff(_: FormState, formData: FormData): Promise<For
   const data = parsed.data;
 
   if (await isEmailTaken(data.email)) return invalid(formData, { email: "Энэ имэйл бүртгэлтэй байна" });
+  if (data.phone && (await isPhoneTaken(data.phone))) return invalid(formData, { phone: "Энэ утасны дугаар бүртгэлтэй байна" });
 
-  const { id, password } = await createAccount({ ...data, cardNumber: null });
+  const { id, password } = await createAccount({ ...data, loginByPhone: false });
   await audit(me, "user.create", `${data.role === "admin" ? "Админ" : "Номын санч"} ${data.name} (${data.email})`);
   revalidatePath("/staff/users");
   return { password, createdId: id };
@@ -47,6 +48,7 @@ export async function updateStaff(id: string, _: FormState, formData: FormData):
   // Өөрийгөө админаас буулгавал систем админгүй үлдэж болзошгүй
   if (id === me.id && data.role !== "admin") return invalid(formData, { role: "Өөрийн эрхийг бууруулах боломжгүй" });
   if (await isEmailTaken(data.email, id)) return invalid(formData, { email: "Энэ имэйл бүртгэлтэй байна" });
+  if (data.phone && (await isPhoneTaken(data.phone, id))) return invalid(formData, { phone: "Энэ утасны дугаар бүртгэлтэй байна" });
 
   await db
     .update(user)

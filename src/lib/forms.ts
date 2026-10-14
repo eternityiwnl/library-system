@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhone } from "./phone";
 
 export type FormState = {
   error?: string;
@@ -34,18 +35,27 @@ const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? 
 
 export const fields = {
   name: z.string().trim().min(1, "Нэрээ оруулна уу").max(100, "Хэт урт байна"),
-  cardNumber: z
-    .string()
+  // Уншигчийн нэвтрэх нэр — заавал, 8 оронтой цифр болгож хадгална
+  loginPhone: z
+    .string({ error: "Утасны дугаар оруулна уу" })
     .trim()
-    .min(1, "Картын дугаар оруулна уу")
-    .max(32, "Хэт урт байна")
-    .regex(/^[A-Za-z0-9-]+$/, "Зөвхөн латин үсэг, тоо, зураас (-) ашиглана"),
+    .min(1, "Утасны дугаар оруулна уу")
+    .transform((v, ctx) => {
+      const phone = normalizePhone(v);
+      if (!phone) ctx.addIssue({ code: "custom", message: "Утасны дугаар 8 оронтой байна" });
+      return phone ?? "";
+    }),
+  // Ажилтны утас — заавал биш
   phone: z.preprocess(
     emptyToNull,
     z
       .string()
       .trim()
-      .regex(/^\+?[0-9 ]{6,20}$/, "Утасны дугаар буруу байна")
+      .transform((v, ctx) => {
+        const phone = normalizePhone(v);
+        if (!phone) ctx.addIssue({ code: "custom", message: "Утасны дугаар 8 оронтой байна" });
+        return phone ?? "";
+      })
       .nullable(),
   ),
   optionalEmail: z.preprocess(

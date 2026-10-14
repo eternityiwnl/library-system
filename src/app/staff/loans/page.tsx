@@ -5,6 +5,7 @@ import { bookCopies, books, loans, user } from "@/db/schema";
 import { Card, PageHeader } from "@/components/ui";
 import { containsPattern } from "@/lib/catalog";
 import { normalizeInventoryNumber, selectLoans, TODAY } from "@/lib/circulation";
+import { normalizePhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { LoansTable } from "./loans-table";
 
@@ -36,7 +37,7 @@ export default async function LoansPage({
       ? or(
           ilike(books.title, pattern),
           ilike(user.name, pattern),
-          eq(user.username, query.toLowerCase()),
+          eq(user.phone, normalizePhone(query) ?? query),
           eq(bookCopies.inventoryNumber, normalizeInventoryNumber(query)),
         )
       : undefined,
@@ -89,7 +90,7 @@ export default async function LoansPage({
         <input
           name="q"
           defaultValue={query}
-          placeholder="Ном, уншигч, картын дугаар, бүртгэлийн №"
+          placeholder="Ном, уншигч, утас, бүртгэлийн №"
           aria-label="Зээл хайх"
           className="h-10 w-full max-w-md rounded-md border border-zinc-300 bg-white px-3 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900 sm:text-sm"
         />

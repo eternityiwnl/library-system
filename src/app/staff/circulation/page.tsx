@@ -6,6 +6,7 @@ import { Badge, Card, Notice, PageHeader } from "@/components/ui";
 import { containsPattern } from "@/lib/catalog";
 import { activeLoansOf, getSettings, unpaidFineTotal } from "@/lib/circulation";
 import { formatMoney } from "@/lib/format";
+import { formatPhone, normalizePhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { LoansTable } from "../loans/loans-table";
 import { LendForm, ReturnForm } from "./forms";
@@ -27,7 +28,7 @@ export default async function CirculationPage({ searchParams }: { searchParams: 
             <input
               name="reader"
               defaultValue={query}
-              placeholder="Картын дугаар, нэр эсвэл утас"
+              placeholder="Утасны дугаар эсвэл нэр"
               aria-label="Уншигч хайх"
               autoFocus={!query}
               autoComplete="off"
@@ -53,19 +54,27 @@ export default async function CirculationPage({ searchParams }: { searchParams: 
 }
 
 async function ReaderLookup({ query }: { query: string }) {
-  // Эхлээд картын дугаараар яг таарахыг, олдохгүй бол нэр/утсаар хайна
-  const [exact] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(and(eq(user.role, "reader"), eq(user.username, query.toLowerCase())))
-    .limit(1);
-  if (exact) return <ReaderPanel readerId={exact.id} />;
+  // Эхлээд утасны дугаараар яг таарахыг, олдохгүй бол нэр эсвэл утасны хэсгээр хайна
+  const phone = normalizePhone(query);
+  if (phone) {
+    const [exact] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(and(eq(user.role, "reader"), eq(user.username, phone)))
+      .limit(1);
+    if (exact) return <ReaderPanel readerId={exact.id} />;
+  }
 
-  const pattern = containsPattern(query);
+  const digits = query.replace(/\D/g, "");
   const matches = await db
     .select({ id: user.id, name: user.name, username: user.username, phone: user.phone })
     .from(user)
-    .where(and(eq(user.role, "reader"), or(ilike(user.name, pattern), ilike(user.phone, pattern), ilike(user.username, pattern))))
+    .where(
+      and(
+        eq(user.role, "reader"),
+        or(ilike(user.name, containsPattern(query)), digits.length >= 3 ? ilike(user.phone, containsPattern(digits)) : undefined),
+      ),
+    )
     .limit(10);
 
   if (matches.length === 1) return <ReaderPanel readerId={matches[0].id} />;
@@ -75,11 +84,11 @@ async function ReaderLookup({ query }: { query: string }) {
       {matches.map((m) => (
         <li key={m.id}>
           <Link
-            href={`/staff/circulation?reader=${encodeURIComponent(m.username ?? "")}`}
+            href={`/staff/circulation?reader=${m.username ?? m.phone ?? ""}`}
             className="flex justify-between gap-4 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
           >
             <span>{m.name}</span>
-            <span className="font-mono text-zinc-500">{(m.username ?? "").toUpperCase()}</span>
+            <span className="text-zinc-500 tabular-nums">{formatPhone(m.username ?? m.phone)}</span>
           </Link>
         </li>
       ))}
@@ -107,10 +116,7 @@ async function ReaderPanel({ readerId }: { readerId: string }) {
           <Link href={`/staff/readers/${reader.id}`} className="text-lg font-semibold hover:underline">
             {reader.name}
           </Link>
-          <p className="font-mono text-sm text-zinc-500">
-            {(reader.username ?? "").toUpperCase()}
-            {reader.phone && <span className="ml-3 font-sans">{reader.phone}</span>}
-          </p>
+          <p className="text-sm text-zinc-500 tabular-nums">{formatPhone(reader.phone)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {reader.banned && <Badge tone="red">Идэвхгүй</Badge>}
