@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { bookCopies, books, categories, loans } from "@/db/schema";
 
@@ -19,6 +19,8 @@ export async function searchBooks(input: {
   page: number;
   pageSize: number;
   order?: "newest" | "title";
+  /** Зөвхөн эдгээр номыг (жишээ нь их уншигдсан) */
+  ids?: number[];
 }) {
   const pattern = containsPattern(input.query);
   const isbnQuery = input.query.replace(/[\s-]/g, "").toUpperCase();
@@ -31,6 +33,7 @@ export async function searchBooks(input: {
         )
       : undefined,
     input.categoryId ? eq(books.categoryId, input.categoryId) : undefined,
+    input.ids ? inArray(books.id, input.ids) : undefined,
   );
 
   const [rows, [{ total }]] = await Promise.all([
@@ -40,6 +43,9 @@ export async function searchBooks(input: {
         title: books.title,
         author: books.author,
         year: books.publishedYear,
+        coverVersion: books.coverVersion,
+        // Картад тайлбарын эхний хэсэг л хэрэгтэй
+        excerpt: sql<string | null>`left(${books.description}, 220)`,
         categoryId: books.categoryId,
         category: categories.name,
         copies: count(bookCopies.id),

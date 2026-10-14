@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookCover } from "@/components/book-cover";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
 import { listCategories, searchBooks } from "@/lib/catalog";
 import { requireRole } from "@/lib/session";
@@ -77,9 +78,13 @@ export default async function BooksPage({
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {rows.map((b) => (
               <tr key={b.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <td className="px-4 py-3">
-                  <Link href={`/staff/books/${b.id}`} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
-                    {b.title}
+                <td className="px-4 py-2">
+                  <Link href={`/staff/books/${b.id}`} className="flex items-center gap-3 font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+                    <BookCover book={b} size="xs" />
+                    <span>
+                      {b.title}
+                      {!b.coverVersion && <span className="ml-2 text-xs font-normal text-zinc-400 no-underline">зураггүй</span>}
+                    </span>
                   </Link>
                 </td>
                 <td className="px-4 py-3">{b.author}</td>

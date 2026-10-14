@@ -2,12 +2,13 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { bookCopies, books, loans, user } from "@/db/schema";
-import { Card, Notice, PageHeader } from "@/components/ui";
+import { Card, LinkButton, Notice, PageHeader } from "@/components/ui";
 import { listCategories } from "@/lib/catalog";
 import { requireRole } from "@/lib/session";
 import { updateBook } from "../actions";
 import { BookForm } from "../book-form";
 import { AddCopiesForm, CopyRow, DeleteBookButton } from "./copies";
+import { CoverUploader } from "./cover-uploader";
 
 export default async function BookPage({
   params,
@@ -44,8 +45,12 @@ export default async function BookPage({
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <PageHeader title={book.title} />
+      <PageHeader title={book.title} actions={<LinkButton href={`/catalog/${book.id}`} variant="secondary">Каталогт харах</LinkButton>} />
       {created && <Notice tone="success">Номыг бүртгэлээ.</Notice>}
+
+      <Card>
+        <CoverUploader book={book} />
+      </Card>
 
       <Card>
         <h2 className="mb-4 font-semibold">

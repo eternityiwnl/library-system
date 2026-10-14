@@ -1,11 +1,11 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { bookCopies, books, copyStatus } from "@/db/schema";
+import { bookCopies, bookCovers, books, copyStatus } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db-errors";
 import { fieldErrorsOf, fields, invalid, type FormState } from "@/lib/forms";
@@ -153,4 +153,59 @@ export async function deleteCopy(bookId: number, copyId: number): Promise<FormSt
   if (deleted[0]) await audit(staff, "copy.delete", `«${await bookTitle(bookId)}» ${deleted[0].inventoryNumber}`);
   refresh(bookId);
   return { success: "Устгалаа" };
+}
+
+const MAX_COVER_BYTES = 800 * 1024;
+
+// Файлын эхний байтаар төрлийг тогтооно — нэр, Content-Type-д найдахгүй
+function detectImageMime(bytes: Uint8Array): string | null {
+  const ascii = (from: number, to: number) => String.fromCharCode(...bytes.slice(from, to));
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes[0] === 0x89 && ascii(1, 4) === "PNG") return "image/png";
+  return null;
+}
+
+export async function uploadCover(bookId: number, _: FormState, formData: FormData): Promise<FormState> {
+  const staff = await requireRole("admin", "librarian");
+  const file = formData.get("cover");
+  if (!(file instanceof File) || file.size === 0) return { error: "Зураг сонгоно уу" };
+  if (file.size > MAX_COVER_BYTES) return { error: "Зураг хэт том байна (800KB хүртэл)" };
+
+  const data = Buffer.from(await file.arrayBuffer());
+  const mime = detectImageMime(data);
+  if (!mime) return { error: "Зөвхөн JPG, PNG, WebP зураг оруулна" };
+
+  const updated = await db.transaction(async (tx) => {
+    const [book] = await tx
+      .update(books)
+      .set({ coverVersion: sql`coalesce(${books.coverVersion}, 0) + 1` })
+      .where(eq(books.id, bookId))
+      .returning({ title: books.title });
+    if (!book) return null;
+    await tx
+      .insert(bookCovers)
+      .values({ bookId, mime, data })
+      .onConflictDoUpdate({ target: bookCovers.bookId, set: { mime, data, updatedAt: sql`now()` } });
+    await audit(staff, "book.update", `«${book.title}»: хавтасны зураг`, tx);
+    return book;
+  });
+  if (!updated) return { error: "Ном олдсонгүй" };
+  revalidatePath("/", "layout");
+  return { success: "Зургийг хадгаллаа" };
+}
+
+export async function removeCover(bookId: number): Promise<FormState> {
+  const staff = await requireRole("admin", "librarian");
+  await db.transaction(async (tx) => {
+    await tx.delete(bookCovers).where(eq(bookCovers.bookId, bookId));
+    const [book] = await tx
+      .update(books)
+      .set({ coverVersion: null })
+      .where(eq(books.id, bookId))
+      .returning({ title: books.title });
+    if (book) await audit(staff, "book.update", `«${book.title}»: хавтасны зургийг устгасан`, tx);
+  });
+  revalidatePath("/", "layout");
+  return { success: "Зургийг устгалаа" };
 }

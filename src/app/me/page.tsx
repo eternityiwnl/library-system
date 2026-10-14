@@ -6,6 +6,7 @@ import { bookCopies, books, fines, loans } from "@/db/schema";
 import { Badge, Card, Notice } from "@/components/ui";
 import { activeLoansOf, getSettings, selectLoans } from "@/lib/circulation";
 import { formatDate, formatMoney } from "@/lib/format";
+import { BookCover } from "@/components/book-cover";
 import { formatPhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { RenewButton } from "./renew-button";
@@ -82,7 +83,10 @@ export default async function ReaderHome() {
           current.map((loan) => {
             const renewalsLeft = rules.maxRenewals - loan.renewalCount;
             return (
-              <Card key={loan.id} className="flex flex-wrap items-center gap-4">
+              <Card key={loan.id} className="flex items-center gap-4">
+                <Link href={`/catalog/${loan.bookId}`} tabIndex={-1} aria-hidden>
+                  <BookCover book={{ id: loan.bookId, title: loan.title, author: loan.author, coverVersion: loan.coverVersion }} size="sm" className="w-12 sm:w-14" />
+                </Link>
                 <div className="min-w-0 flex-1">
                   <Link href={`/catalog/${loan.bookId}`} className="font-medium hover:underline">
                     {loan.title}

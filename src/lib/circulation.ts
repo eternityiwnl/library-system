@@ -209,6 +209,8 @@ export function selectLoans() {
       id: loans.id,
       title: books.title,
       bookId: books.id,
+      author: books.author,
+      coverVersion: books.coverVersion,
       inventoryNumber: bookCopies.inventoryNumber,
       readerId: loans.readerId,
       readerName: user.name,
