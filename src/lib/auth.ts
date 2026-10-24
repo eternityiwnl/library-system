@@ -8,14 +8,16 @@ import * as schema from "@/db/schema";
 export const ROLES = ["admin", "librarian", "reader"] as const;
 export type Role = (typeof ROLES)[number];
 
-export const PRODUCTION_URL = "https://library-system-nine-pink.vercel.app";
+// Vercel дээр домэйн солиход энд болон доорх allowedHosts-д заавал нэмнэ — үгүй бол
+// нэвтрэлт "Invalid origin" (403) алдаа өгнө
+export const PRODUCTION_URL = "https://hureelibrary.vercel.app";
 
 export const auth = betterAuth({
   appName: "Хүрээ Номын сан",
   baseURL: {
     // Зөвхөн өөрийн хаягууд. "*.vercel.app" гэвэл бусдын сайт ч итгэмжлэгдэнэ.
     allowedHosts: [
-      "library-system-nine-pink.vercel.app",
+      "hureelibrary.vercel.app",
       "library-system-git-main-nity2.vercel.app",
       "localhost:3000",
       "localhost:3100",
