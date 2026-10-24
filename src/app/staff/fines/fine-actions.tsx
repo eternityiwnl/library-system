@@ -18,7 +18,7 @@ export function FineActions({ fineId, amount, canWaive }: { fineId: number; amou
   return (
     <div className="flex justify-end gap-2">
       <Button
-        className="h-8 px-3"
+        size="sm"
         disabled={pending}
         onClick={() => resolve("paid", `${formatMoney(amount)} төлбөр хүлээн авсан уу?`)}
       >
@@ -27,7 +27,7 @@ export function FineActions({ fineId, amount, canWaive }: { fineId: number; amou
       {canWaive && (
         <Button
           variant="secondary"
-          className="h-8 px-3"
+          size="sm"
           disabled={pending}
           onClick={() => resolve("waived", `${formatMoney(amount)} торгуулиас чөлөөлөх үү?`)}
         >

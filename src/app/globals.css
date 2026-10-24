@@ -1,8 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Өнгөний систем — "номын сангийн цаас ба ногоон".
+ * Хуудсууд Tailwind-ийн zinc (саарал) ба emerald (ногоон) нэрийг ашигладаг тул
+ * тэдгээрийг энд дулаан цаасан саарал, гүн ойн ногооноор дахин тодорхойлов —
+ * бүх хуудас нэг дор, харанхуй горимтой хамт шинэчлэгдэнэ.
+ */
+@theme {
+  --color-zinc-50: #f6f5ef;
+  --color-zinc-100: #eeede5;
+  --color-zinc-200: #e2e1d7;
+  --color-zinc-300: #cdccc0;
+  --color-zinc-400: #9fa298;
+  --color-zinc-500: #656c63;
+  --color-zinc-600: #50574f;
+  --color-zinc-700: #3c433c;
+  --color-zinc-800: #283029;
+  --color-zinc-900: #1a201b;
+  --color-zinc-950: #101511;
+
+  --color-emerald-50: #edf6f0;
+  --color-emerald-100: #d3eadc;
+  --color-emerald-200: #a9d4bb;
+  --color-emerald-300: #79b996;
+  --color-emerald-400: #52a37b;
+  --color-emerald-500: #2f8862;
+  --color-emerald-600: #1f7050;
+  --color-emerald-700: #175c41;
+  --color-emerald-800: #124933;
+  --color-emerald-900: #0e3727;
+  --color-emerald-950: #082218;
+
+  /* Ажилтны цэс, нэвтрэх хуудасны бараан ногоон (танилцуулгын слайдтай ижил) */
+  --color-forest-950: #0b1913;
+  --color-forest-900: #10241c;
+  --color-forest-800: #183428;
+  --color-forest-700: #234536;
+  --color-forest-300: #a9c3b7;
+  --color-forest-200: #cfe0d7;
+
+  /* Жижиг чимэглэлд — гуулин шар */
+  --color-brass-400: #d4a95a;
+  --color-brass-500: #b88a3a;
+
+  --shadow-card: 0 1px 2px rgb(16 36 28 / 0.04), 0 1px 1px rgb(16 36 28 / 0.03);
+  --shadow-raised: 0 10px 30px -12px rgb(16 36 28 / 0.25), 0 2px 6px -2px rgb(16 36 28 / 0.08);
 }
 
 @theme inline {
@@ -10,12 +52,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-literata), Georgia, "Times New Roman", serif;
+}
+
+:root {
+  --background: var(--color-zinc-50);
+  --foreground: #16201a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-zinc-950);
+    --foreground: #e9ece6;
+    color-scheme: dark;
   }
 }
 
@@ -23,4 +72,38 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  /* Гарчгууд номын serif фонтоор — хуудас бүрт тусад нь бичихгүй */
+  h1,
+  h2 {
+    font-family: var(--font-serif);
+  }
+
+  ::selection {
+    background: var(--color-emerald-200);
+    color: var(--color-emerald-950);
+  }
+
+  /* Хүснэгтийн толгой — жижиг, тод, бүх жагсаалтад ижил */
+  thead {
+    background: color-mix(in srgb, var(--color-zinc-100) 70%, transparent);
+  }
+  th {
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  @media (prefers-color-scheme: dark) {
+    thead {
+      background: color-mix(in srgb, var(--color-zinc-800) 45%, transparent);
+    }
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-zinc-400);
+  }
 }

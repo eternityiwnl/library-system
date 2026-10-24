@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { BookOpen, CalendarClock, CircleCheck, KeyRound, Phone } from "lucide-react";
 import { db } from "@/db";
 import { bookCopies, books, fines, loans } from "@/db/schema";
 import { Badge, Card, Notice } from "@/components/ui";
@@ -38,16 +39,43 @@ export default async function ReaderHome() {
   const canBorrow = current.length < rules.maxActiveLoans && overdue.length === 0 && !(unpaidTotal > 0 && unpaidTotal >= rules.maxUnpaidFine);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Сайн байна уу, {reader.name}</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Утас <span className="text-zinc-900 tabular-nums dark:text-zinc-100">{formatPhone(reader.phone)}</span>
-          {" · "}
-          <Link href="/password" className="hover:underline">
-            Нууц үг солих
-          </Link>
-        </p>
+    <div className="flex flex-col gap-9">
+      <div className="relative overflow-hidden rounded-2xl bg-forest-900 p-6 text-forest-200 shadow-raised sm:p-8">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_120%_at_100%_0%,rgb(212_169_90/0.18),transparent_60%)]"
+          aria-hidden
+        />
+        <div className="relative flex flex-wrap items-center gap-5">
+          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-brass-500/20 font-serif text-2xl font-semibold text-brass-400 ring-1 ring-brass-400/30">
+            {reader.name.trim().charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-serif text-2xl leading-tight font-semibold tracking-tight text-white sm:text-3xl">
+              Сайн байна уу, {reader.name}
+            </h1>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-forest-300">
+              <span className="flex items-center gap-1.5">
+                <Phone className="size-3.5" aria-hidden />
+                <span className="text-white tabular-nums">{formatPhone(reader.phone)}</span>
+              </span>
+              <Link href="/password" className="flex items-center gap-1.5 transition-colors hover:text-white">
+                <KeyRound className="size-3.5" aria-hidden /> Нууц үг солих
+              </Link>
+            </p>
+          </div>
+          <div className="w-full sm:w-auto sm:text-right">
+            <p className="font-serif text-3xl font-semibold text-white tabular-nums">
+              {current.length}
+              <span className="text-lg text-forest-300"> / {rules.maxActiveLoans}</span>
+            </p>
+            <div className="mt-2 flex gap-1 sm:justify-end" aria-hidden>
+              {Array.from({ length: rules.maxActiveLoans }, (_, i) => (
+                <span key={i} className={`h-1.5 w-6 rounded-full ${i < current.length ? "bg-brass-400" : "bg-white/15"}`} />
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-forest-300">зээлсэн ном</p>
+          </div>
+        </div>
       </div>
 
       {overdue.length > 0 && (
@@ -63,36 +91,41 @@ export default async function ReaderHome() {
       )}
 
       <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-semibold">Зээлж буй ном</h2>
-          <p className="text-sm text-zinc-500">
-            {current.length} / {rules.maxActiveLoans}
-            {canBorrow ? " · дахин зээлэх боломжтой" : ""}
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b border-zinc-200 pb-3 dark:border-zinc-800">
+          <h2 className="font-serif text-xl font-semibold">Зээлж буй ном</h2>
+          {canBorrow && (
+            <p className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400">
+              <CircleCheck className="size-4" aria-hidden /> Дахин зээлэх боломжтой
+            </p>
+          )}
         </div>
         {current.length === 0 ? (
-          <Card>
-            <p className="text-sm text-zinc-500">
-              Одоогоор зээлсэн ном алга.{" "}
-              <Link href="/catalog" className="text-emerald-700 hover:underline dark:text-emerald-400">
-                Ном хайх
-              </Link>
-            </p>
-          </Card>
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            <BookOpen className="size-8 text-zinc-400" aria-hidden />
+            <p>Одоогоор зээлсэн ном алга.</p>
+            <Link href="/catalog" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+              Ном хайх
+            </Link>
+          </div>
         ) : (
           current.map((loan) => {
             const renewalsLeft = rules.maxRenewals - loan.renewalCount;
             return (
-              <Card key={loan.id} className="flex items-center gap-4">
-                <Link href={`/catalog/${loan.bookId}`} tabIndex={-1} aria-hidden>
-                  <BookCover book={{ id: loan.bookId, title: loan.title, author: loan.author, coverVersion: loan.coverVersion }} size="sm" className="w-12 sm:w-14" />
+              <Card
+                key={loan.id}
+                className={`flex items-center gap-4 ${loan.daysOverdue > 0 ? "border-l-4 border-l-red-500" : ""}`}
+              >
+                <Link href={`/catalog/${loan.bookId}`} tabIndex={-1} aria-hidden className="shrink-0">
+                  <BookCover book={{ id: loan.bookId, title: loan.title, author: loan.author, coverVersion: loan.coverVersion }} size="sm" className="w-14 sm:w-16" />
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <Link href={`/catalog/${loan.bookId}`} className="font-medium hover:underline">
+                  <Link href={`/catalog/${loan.bookId}`} className="font-serif text-lg leading-snug font-semibold hover:underline">
                     {loan.title}
                   </Link>
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-                    Буцаах: <span className="text-zinc-900 dark:text-zinc-100">{formatDate(loan.dueDate)}</span>
+                  <p className="text-sm text-zinc-500">{loan.author}</p>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                    <CalendarClock className="size-4" aria-hidden />
+                    Буцаах: <span className="font-medium text-zinc-900 dark:text-zinc-100">{formatDate(loan.dueDate)}</span>
                     {loan.daysOverdue > 0 && <Badge tone="red">{loan.daysOverdue} хоног хэтэрсэн</Badge>}
                     {loan.renewalCount > 0 && <span>· {loan.renewalCount} удаа сунгасан</span>}
                   </p>
@@ -112,7 +145,7 @@ export default async function ReaderHome() {
 
       {unpaidFines.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Төлөгдөөгүй торгууль</h2>
+          <h2 className="border-b border-zinc-200 pb-3 font-serif text-xl font-semibold dark:border-zinc-800">Төлөгдөөгүй торгууль</h2>
           <Card className="p-0">
             <ul className="divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
               {unpaidFines.map((f) => (
@@ -130,15 +163,16 @@ export default async function ReaderHome() {
 
       {history.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Өмнө зээлсэн</h2>
+          <h2 className="border-b border-zinc-200 pb-3 font-serif text-xl font-semibold dark:border-zinc-800">Өмнө зээлсэн</h2>
           <Card className="p-0">
             <ul className="divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
               {history.map((h) => (
-                <li key={h.id} className="flex flex-wrap justify-between gap-2 px-5 py-3">
-                  <Link href={`/catalog/${h.bookId}`} className="hover:underline">
+                <li key={h.id} className="flex items-center gap-3 px-5 py-2.5">
+                  <BookCover book={{ id: h.bookId, title: h.title, coverVersion: h.coverVersion }} size="xs" className="w-7" />
+                  <Link href={`/catalog/${h.bookId}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
                     {h.title}
                   </Link>
-                  <span className="text-zinc-500">
+                  <span className="shrink-0 text-zinc-500 tabular-nums">
                     {formatDate(h.issuedAt)} – {formatDate(h.returnedAt)}
                   </span>
                 </li>

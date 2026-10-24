@@ -60,7 +60,7 @@ export function LoginForm() {
         autoFocus
       />
       <Field label="Нууц үг" name="password" type="password" autoComplete="current-password" required />
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} size="lg" className="mt-2">
         {pending ? "Нэвтэрч байна…" : "Нэвтрэх"}
       </Button>
     </form>

@@ -100,7 +100,7 @@ export function CopyRow({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 whitespace-nowrap">
-          <Button form={formId} type="submit" variant="secondary" disabled={pending} className="h-9">
+          <Button form={formId} type="submit" variant="secondary" disabled={pending} size="sm">
             Хадгалах
           </Button>
           <Button
@@ -108,7 +108,7 @@ export function CopyRow({
             variant="secondary"
             disabled={deleting || Boolean(copy.loanReaderId)}
             title={copy.loanReaderId ? "Олгогдсон хувийг устгах боломжгүй" : undefined}
-            className="h-9"
+            size="sm"
             onClick={() => {
               if (!window.confirm(`${copy.inventoryNumber} хувийг устгах уу?`)) return;
               startDelete(async () => setDeleteState(await deleteCopy(bookId, copy.id)));

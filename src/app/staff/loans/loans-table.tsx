@@ -57,24 +57,24 @@ export function LoansTable({
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {rows.map((r) => (
             <tr key={r.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-              <td className="px-4 py-3">
-                <Link href={`/staff/books/${r.bookId}`} className="text-emerald-700 hover:underline dark:text-emerald-400">
+              <td className="min-w-32 px-4 py-3">
+                <Link href={`/staff/books/${r.bookId}`} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
                   {r.title}
                 </Link>
               </td>
-              <td className="px-4 py-3 font-mono">{r.inventoryNumber}</td>
+              <td className="px-4 py-3 font-mono text-zinc-600 dark:text-zinc-400">{r.inventoryNumber}</td>
               {showReader && (
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <Link href={`/staff/readers/${r.readerId}`} className="hover:underline">
                     {r.readerName}
                   </Link>
-                  {r.readerPhone && <span className="ml-2 text-xs text-zinc-500 tabular-nums">{formatPhone(r.readerPhone)}</span>}
+                  {r.readerPhone && <span className="block text-xs text-zinc-500 tabular-nums">{formatPhone(r.readerPhone)}</span>}
                 </td>
               )}
               <td className="px-4 py-3 whitespace-nowrap">{formatDate(r.issuedAt)}</td>
               <td className="px-4 py-3">
                 <DueBadge loan={r} />
-                {r.renewalCount > 0 && <span className="ml-2 text-xs text-zinc-500">({r.renewalCount} сунгалт)</span>}
+                {r.renewalCount > 0 && <span className="block text-xs text-zinc-500">{r.renewalCount} удаа сунгасан</span>}
               </td>
               {hasReturned && <td className="px-4 py-3 whitespace-nowrap">{r.returnedAt ? formatDate(r.returnedAt) : "—"}</td>}
               <td className="px-4 py-3">

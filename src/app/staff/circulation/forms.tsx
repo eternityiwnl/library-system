@@ -75,7 +75,7 @@ export function LoanActions({ loanId, inventoryNumber }: { loanId: number; inven
     <div className="flex justify-end gap-2">
       <Button
         variant="secondary"
-        className="h-8 px-3"
+        size="sm"
         disabled={pending}
         onClick={() => startTransition(async () => toast(await renewAction(loanId)))}
       >
@@ -83,7 +83,7 @@ export function LoanActions({ loanId, inventoryNumber }: { loanId: number; inven
       </Button>
       <Button
         variant="secondary"
-        className="h-8 px-3"
+        size="sm"
         disabled={pending}
         onClick={() => {
           if (!window.confirm(`${inventoryNumber} дугаартай номыг буцаах уу?`)) return;

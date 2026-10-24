@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { and, asc, count, eq, isNull, lt, sql } from "drizzle-orm";
+import { AlarmClock, ArrowLeftRight, ArrowRight, BookCopy, BookMarked, Library, Receipt, Users } from "lucide-react";
 import { db } from "@/db";
 import { bookCopies, books, fines, loans, user } from "@/db/schema";
 import { Card, LinkButton, PageHeader } from "@/components/ui";
@@ -26,23 +27,44 @@ export default async function StaffDashboard() {
   ]);
 
   const stats = [
-    { label: "Зээлэгдсэн ном", value: active.n.toLocaleString("mn-MN"), href: "/staff/loans" },
-    { label: "Хугацаа хэтэрсэн", value: overdue.n.toLocaleString("mn-MN"), href: "/staff/loans?status=overdue", alert: overdue.n > 0 },
-    { label: "Төлөгдөөгүй торгууль", value: formatMoney(unpaid.n), href: "/staff/fines", alert: unpaid.n > 0 },
-    { label: "Уншигч", value: readers.n.toLocaleString("mn-MN"), href: "/staff/readers" },
-    { label: "Номын нэр", value: titles.n.toLocaleString("mn-MN"), href: "/staff/books" },
-    { label: "Номын хувь", value: copies.n.toLocaleString("mn-MN"), href: "/staff/books" },
+    { label: "Зээлэгдсэн ном", value: active.n.toLocaleString("mn-MN"), href: "/staff/loans", icon: BookMarked },
+    { label: "Хугацаа хэтэрсэн", value: overdue.n.toLocaleString("mn-MN"), href: "/staff/loans?status=overdue", alert: overdue.n > 0, icon: AlarmClock },
+    { label: "Төлөгдөөгүй торгууль", value: formatMoney(unpaid.n), href: "/staff/fines", alert: unpaid.n > 0, icon: Receipt },
+    { label: "Уншигч", value: readers.n.toLocaleString("mn-MN"), href: "/staff/readers", icon: Users },
+    { label: "Номын нэр", value: titles.n.toLocaleString("mn-MN"), href: "/staff/books", icon: Library },
+    { label: "Номын хувь", value: copies.n.toLocaleString("mn-MN"), href: "/staff/books", icon: BookCopy },
   ];
 
   return (
     <>
-      <PageHeader title="Хяналтын самбар" actions={<LinkButton href="/staff/circulation">Олголт / буцаалт</LinkButton>} />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <PageHeader
+        title="Хяналтын самбар"
+        actions={
+          <LinkButton href="/staff/circulation">
+            <ArrowLeftRight aria-hidden /> Олголт / буцаалт
+          </LinkButton>
+        }
+      />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
         {stats.map((s) => (
           <Link key={s.label} href={s.href} className="group">
-            <Card className="h-full transition-colors group-hover:border-zinc-300 dark:group-hover:border-zinc-700">
-              <p className="text-sm text-zinc-500">{s.label}</p>
-              <p className={`mt-1 text-2xl font-semibold tabular-nums sm:text-3xl ${s.alert ? "text-red-600 dark:text-red-400" : ""}`}>
+            <Card className="relative h-full overflow-hidden transition group-hover:-translate-y-0.5 group-hover:border-zinc-300 group-hover:shadow-raised dark:group-hover:border-zinc-700">
+              {s.alert && <span className="absolute inset-x-0 top-0 h-1 bg-red-500" aria-hidden />}
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm text-zinc-500">{s.label}</p>
+                <span
+                  className={`grid size-9 shrink-0 place-items-center rounded-lg ${
+                    s.alert
+                      ? "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400"
+                      : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                  }`}
+                >
+                  <s.icon className="size-[18px]" aria-hidden />
+                </span>
+              </div>
+              <p
+                className={`mt-2 font-serif text-3xl font-semibold tabular-nums sm:text-4xl ${s.alert ? "text-red-600 dark:text-red-400" : ""}`}
+              >
                 {s.value}
               </p>
             </Card>
@@ -51,11 +73,17 @@ export default async function StaffDashboard() {
       </div>
 
       {overdueRows.length > 0 && (
-        <Card className="mt-6 p-0">
-          <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <h2 className="font-semibold">Хугацаа хамгийн их хэтэрсэн</h2>
-            <Link href="/staff/loans?status=overdue" className="text-sm text-emerald-700 hover:underline dark:text-emerald-400">
-              Бүгдийг харах
+        <Card className="mt-8 overflow-hidden p-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 pt-5 pb-4">
+            <h2 className="flex items-center gap-2 font-serif text-lg font-semibold">
+              <AlarmClock className="size-5 text-red-600 dark:text-red-400" aria-hidden />
+              Хугацаа хамгийн их хэтэрсэн
+            </h2>
+            <Link
+              href="/staff/loans?status=overdue"
+              className="flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+            >
+              Бүгдийг харах <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
           <LoansTable rows={overdueRows} empty="" />

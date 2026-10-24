@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Search, SearchX } from "lucide-react";
 import { BookCard } from "@/components/book-card";
 import { Pagination } from "@/components/ui";
 import { listCategories, searchBooks } from "@/lib/catalog";
@@ -35,37 +36,37 @@ export default async function CatalogPage({
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold tracking-tight">Ном хайх</h1>
+      <h1 className="mb-5 font-serif text-3xl font-semibold tracking-tight">Ном хайх</h1>
 
-      <form className="mb-4 flex gap-2" role="search">
+      <form
+        role="search"
+        className="mb-5 flex items-center gap-2 rounded-2xl border border-zinc-300 bg-white p-1.5 pl-4 shadow-card transition focus-within:border-emerald-600 focus-within:ring-[3px] focus-within:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900"
+      >
         {categoryId && <input type="hidden" name="category" value={categoryId} />}
+        <Search className="size-5 shrink-0 text-zinc-400" aria-hidden />
         <input
           name="q"
           defaultValue={query}
           placeholder="Номын нэр, зохиогч эсвэл ISBN"
           aria-label="Ном хайх"
-          className="h-11 w-full rounded-md border border-zinc-300 bg-white px-4 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900"
+          className="h-10 w-full min-w-0 bg-transparent text-base outline-none"
         />
-        <button type="submit" className="h-11 rounded-md bg-emerald-700 px-5 font-medium text-white hover:bg-emerald-800">
+        <button
+          type="submit"
+          className="h-10 shrink-0 rounded-xl bg-emerald-700 px-5 font-medium text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+        >
           Хайх
         </button>
       </form>
 
       {categories.length > 0 && (
-        <nav className="mb-6 flex flex-wrap gap-2 text-sm" aria-label="Ангилал">
-          <Link
-            href={href({ category: null })}
-            aria-current={!categoryId ? "page" : undefined}
-            className="rounded-full border border-zinc-300 px-3 py-1 hover:bg-zinc-100 aria-[current=page]:border-emerald-700 aria-[current=page]:bg-emerald-700 aria-[current=page]:text-white dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            Бүгд
-          </Link>
-          {categories.map((c) => (
+        <nav className="mb-7 flex flex-wrap gap-2 text-sm" aria-label="Ангилал">
+          {[{ id: null, name: "Бүгд" }, ...categories].map((c) => (
             <Link
-              key={c.id}
+              key={c.id ?? "all"}
               href={href({ category: c.id })}
-              aria-current={categoryId === c.id ? "page" : undefined}
-              className="rounded-full border border-zinc-300 px-3 py-1 hover:bg-zinc-100 aria-[current=page]:border-emerald-700 aria-[current=page]:bg-emerald-700 aria-[current=page]:text-white dark:border-zinc-700 dark:hover:bg-zinc-800"
+              aria-current={(c.id === null ? !categoryId : categoryId === c.id) ? "page" : undefined}
+              className="rounded-full border border-zinc-300 bg-white px-3.5 py-1.5 shadow-card transition hover:border-zinc-400 aria-[current=page]:border-forest-900 aria-[current=page]:bg-forest-900 aria-[current=page]:text-white dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:aria-[current=page]:border-emerald-600 dark:aria-[current=page]:bg-emerald-700"
             >
               {c.name}
             </Link>
@@ -95,7 +96,10 @@ export default async function CatalogPage({
           ))}
         </div>
       ) : (
-        <p className="py-16 text-center text-zinc-500">{query || categoryId ? "Ном олдсонгүй" : "Одоогоор ном бүртгээгүй байна"}</p>
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-zinc-300 py-16 text-center text-zinc-500 dark:border-zinc-700">
+          <SearchX className="size-8 text-zinc-400" aria-hidden />
+          <p>{query || categoryId ? "Ном олдсонгүй" : "Одоогоор ном бүртгээгүй байна"}</p>
+        </div>
       )}
 
       <Pagination page={page} pages={pages} href={(p) => href({ page: p })} />

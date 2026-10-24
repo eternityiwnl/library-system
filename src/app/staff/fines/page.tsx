@@ -136,11 +136,11 @@ export default async function FinesPage({
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {rows.map((f) => (
               <tr key={f.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <Link href={`/staff/readers/${f.readerId}`} className="hover:underline">
                     {f.readerName}
                   </Link>
-                  <span className="ml-2 text-xs text-zinc-500 tabular-nums">{formatPhone(f.readerPhone)}</span>
+                  <span className="block text-xs text-zinc-500 tabular-nums">{formatPhone(f.readerPhone)}</span>
                 </td>
                 <td className="px-4 py-3">{f.title}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">{f.daysLate} хоног</td>

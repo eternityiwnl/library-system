@@ -11,7 +11,7 @@ export function RenewButton({ loanId }: { loanId: number }) {
   return (
     <Button
       variant="secondary"
-      className="h-9"
+      size="sm"
       disabled={pending}
       onClick={() => startTransition(async () => toast(await renewMyLoan(loanId)))}
     >

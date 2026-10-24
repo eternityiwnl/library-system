@@ -21,7 +21,7 @@ export default async function CirculationPage({ searchParams }: { searchParams: 
   return (
     <>
       <PageHeader title="Олголт / буцаалт" />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 min-[1400px]:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="flex flex-col gap-4">
           <h2 className="font-semibold">Ном олгох</h2>
           <form className="flex gap-2" role="search">

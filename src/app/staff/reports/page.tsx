@@ -106,7 +106,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         {tiles.map((t) => (
           <Card key={t.label}>
             <p className="text-sm text-zinc-500">{t.label}</p>
-            <p className="mt-1 text-2xl font-semibold sm:text-3xl">{t.value}</p>
+            <p className="mt-2 font-serif text-3xl font-semibold tabular-nums sm:text-4xl">{t.value}</p>
             {t.note && <p className="mt-1 text-xs text-zinc-500">{t.note}</p>}
           </Card>
         ))}
