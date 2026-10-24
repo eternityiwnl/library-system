@@ -57,10 +57,7 @@ export default async function Home() {
           />
           <div className="relative mx-auto grid max-w-5xl items-center gap-12 px-4 py-14 sm:py-20 md:grid-cols-[1fr_auto]">
             <div className="flex flex-col gap-6">
-              <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.16em] text-emerald-700 uppercase dark:text-emerald-400">
-                <span className="h-px w-8 bg-current" aria-hidden />
-                Номын сан
-              </p>
+              <p className="text-xs font-semibold tracking-[0.16em] text-emerald-700 uppercase dark:text-emerald-400">Номын сан</p>
               <h1 className="max-w-xl font-serif text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-6xl">
                 Унших номоо хайж олоорой
               </h1>
