@@ -11,7 +11,7 @@ export type Role = (typeof ROLES)[number];
 export const PRODUCTION_URL = "https://library-system-nine-pink.vercel.app";
 
 export const auth = betterAuth({
-  appName: "Номын сан",
+  appName: "Хүрээ Номын сан",
   baseURL: {
     // Зөвхөн өөрийн хаягууд. "*.vercel.app" гэвэл бусдын сайт ч итгэмжлэгдэнэ.
     allowedHosts: [

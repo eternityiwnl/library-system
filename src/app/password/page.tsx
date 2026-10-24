@@ -5,7 +5,7 @@ import { LogoMark } from "@/components/site-header";
 import { Notice } from "@/components/ui";
 import { PasswordForm } from "./password-form";
 
-export const metadata: Metadata = { title: "Нууц үг солих — Номын сан" };
+export const metadata: Metadata = { title: "Нууц үг солих — Хүрээ Номын сан" };
 
 export default async function PasswordPage() {
   const user = await requireUser({ allowPasswordChange: true });

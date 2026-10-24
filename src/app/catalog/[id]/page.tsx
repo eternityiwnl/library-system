@@ -35,7 +35,7 @@ async function getBook(id: number) {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const id = Number((await params).id);
   const book = Number.isInteger(id) ? await getBook(id) : undefined;
-  return { title: book ? `${book.title} — Номын сан` : "Номын сан" };
+  return { title: book ? `${book.title} — Хүрээ Номын сан` : "Хүрээ Номын сан" };
 }
 
 export default async function CatalogBookPage({ params }: { params: Promise<{ id: string }> }) {

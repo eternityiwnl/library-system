@@ -24,10 +24,18 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200/80 bg-zinc-50/85 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/85">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap" aria-label="Номын сан — нүүр хуудас">
+        <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap" aria-label="Хүрээ Номын сан — нүүр хуудас">
           <LogoMark />
-          {/* Нэвтэрсэн үед утсан дээр цэсэнд зай гаргахын тулд зөвхөн тэмдэг */}
-          <span className={`font-serif text-lg font-semibold tracking-tight ${session ? "max-sm:hidden" : ""}`}>Номын сан</span>
+          {/* Нэвтэрсэн үед утсан дээр цэсэнд зай гаргахын тулд зөвхөн тэмдэг.
+              Утсан дээр нэр хоёр мөр: жижиг "ХҮРЭЭ" дээр нь, "Номын сан" доор нь */}
+          <span
+            className={`font-serif text-lg font-semibold tracking-tight max-sm:flex max-sm:flex-col max-sm:leading-none ${session ? "max-sm:hidden" : ""}`}
+          >
+            <span className="max-sm:mb-0.5 max-sm:font-sans max-sm:text-[10px] max-sm:font-semibold max-sm:tracking-[0.2em] max-sm:text-emerald-700 max-sm:uppercase">
+              Хүрээ{" "}
+            </span>
+            Номын сан
+          </span>
         </Link>
         <nav className="flex items-center gap-0.5 overflow-x-auto text-sm [scrollbar-width:none] sm:gap-1">
           <HeaderLink href="/catalog">Ном хайх</HeaderLink>

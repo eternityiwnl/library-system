@@ -6,7 +6,7 @@ import { LogoMark } from "@/components/site-header";
 import { getSession, homeFor } from "@/lib/session";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Нэвтрэх — Номын сан" };
+export const metadata: Metadata = { title: "Нэвтрэх — Хүрээ Номын сан" };
 
 // Чимэглэлийн тавиур: номын нуруунуудын өнгө, өндөр (%), өргөн (px)
 const SPINES: [string, number, number][] = [
@@ -25,7 +25,7 @@ export default async function LoginPage() {
       <section className="relative hidden flex-col justify-between overflow-hidden bg-forest-900 p-12 text-forest-200 lg:flex">
         <Link href="/" className="flex items-center gap-3 text-white">
           <LogoMark className="size-10" onDark />
-          <span className="font-serif text-xl font-semibold tracking-tight">Номын сан</span>
+          <span className="font-serif text-xl font-semibold tracking-tight">Хүрээ Номын сан</span>
         </Link>
 
         <div className="relative z-10 max-w-md">

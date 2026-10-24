@@ -16,7 +16,7 @@ import { formatDate } from "./format";
 export function reminderConfig() {
   return {
     apiKey: process.env.RESEND_API_KEY ?? "",
-    from: process.env.EMAIL_FROM || "Номын сан <onboarding@resend.dev>",
+    from: process.env.EMAIL_FROM || "Хүрээ Номын сан <onboarding@resend.dev>",
     redirectTo: process.env.EMAIL_REDIRECT_TO || null,
   };
 }
@@ -45,7 +45,7 @@ function composeEmail(name: string, items: Item[], catalogUrl: string) {
       : "Хэрэв дуусгаж амжаагүй бол хугацаагаа сунгах боломжтой.",
     `Зээлсэн номоо эндээс харна уу: ${catalogUrl}/me`,
     "",
-    "Номын сан",
+    "Хүрээ Номын сан",
   ].join("\n");
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#18181b">
 <p>Сайн байна уу, ${escapeHtml(name)}!</p>
@@ -56,7 +56,7 @@ function composeEmail(name: string, items: Item[], catalogUrl: string) {
       : "Хэрэв дуусгаж амжаагүй бол хугацаагаа сунгах боломжтой."
   }</p>
 <p><a href="${catalogUrl}/me" style="color:#047857">Миний ном</a></p>
-<p style="color:#71717a">Номын сан</p></div>`;
+<p style="color:#71717a">Хүрээ Номын сан</p></div>`;
   return { subject, text, html };
 }
 

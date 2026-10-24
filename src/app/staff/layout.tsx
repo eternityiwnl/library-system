@@ -29,7 +29,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
-      <aside className="bg-forest-900 text-forest-200 md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col dark:bg-forest-950 dark:md:border-r dark:md:border-white/5">
+      <aside className="bg-forest-900 text-forest-200 md:sticky md:top-0 md:flex md:h-dvh md:w-68 md:shrink-0 md:flex-col dark:bg-forest-950 dark:md:border-r dark:md:border-white/5">
         {/* Тэмдэг дээр дарвал нийтийн нүүр хуудас руу */}
         <Link
           href="/"
@@ -40,7 +40,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
             <BookOpen className="size-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-serif text-lg leading-tight font-semibold text-white">Номын сан</p>
+            <p className="font-serif text-base leading-tight font-semibold whitespace-nowrap text-white">Хүрээ Номын сан</p>
             <p className="truncate text-xs text-forest-300">Ажлын хэсэг</p>
           </div>
           <House className="size-4 shrink-0 text-forest-300 opacity-60 transition group-hover:text-white group-hover:opacity-100" aria-hidden />

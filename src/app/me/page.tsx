@@ -12,7 +12,7 @@ import { formatPhone } from "@/lib/phone";
 import { requireRole } from "@/lib/session";
 import { RenewButton } from "./renew-button";
 
-export const metadata: Metadata = { title: "Миний ном — Номын сан" };
+export const metadata: Metadata = { title: "Миний ном — Хүрээ Номын сан" };
 
 export default async function ReaderHome() {
   const reader = await requireRole("reader");

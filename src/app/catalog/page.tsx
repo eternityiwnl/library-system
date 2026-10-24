@@ -5,7 +5,7 @@ import { BookCard } from "@/components/book-card";
 import { Pagination } from "@/components/ui";
 import { listCategories, searchBooks } from "@/lib/catalog";
 
-export const metadata: Metadata = { title: "Ном хайх — Номын сан" };
+export const metadata: Metadata = { title: "Ном хайх — Хүрээ Номын сан" };
 
 const PAGE_SIZE = 24;
 

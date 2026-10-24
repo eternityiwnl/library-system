@@ -20,7 +20,7 @@ const literata = Literata({
 });
 
 export const metadata: Metadata = {
-  title: "Номын сан",
+  title: "Хүрээ Номын сан",
   description: "Номын сангийн удирдлагын систем",
 };
 
