@@ -44,7 +44,7 @@ export default async function BookPage({
   if (!book) notFound();
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex max-w-5xl flex-col gap-6">
       <PageHeader title={book.title} actions={<LinkButton href={`/catalog/${book.id}`} variant="secondary">Каталогт харах</LinkButton>} />
       {created && <Notice tone="success">Номыг бүртгэлээ.</Notice>}
 

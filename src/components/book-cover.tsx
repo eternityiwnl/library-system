@@ -83,8 +83,9 @@ export function BookCover({
         <div className="absolute inset-0 flex flex-col py-[11%] pr-[10%] pl-[17%] text-white">
           <Rule />
           <p
-            className="mt-[0.7em] line-clamp-5 font-serif leading-[1.15] font-semibold text-balance"
-            style={{ fontSize: size === "lg" ? "1.45em" : "1.2em" }}
+            // Жижиг хавтсанд урт үг таслагдахгүйн тулд фонт жижиг, шаардлагатай бол үгийг хуваана
+            className="mt-[0.7em] line-clamp-5 font-serif leading-[1.15] font-semibold text-balance [overflow-wrap:anywhere]"
+            style={{ fontSize: { xs: "1em", sm: "1.02em", md: "1.2em", lg: "1.45em" }[size] }}
           >
             {book.title}
           </p>
