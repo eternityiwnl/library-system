@@ -9,6 +9,7 @@ import {
   ClipboardList,
   ExternalLink,
   FolderTree,
+  House,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -29,15 +30,21 @@ export default async function StaffLayout({ children }: { children: ReactNode })
   return (
     <div className="flex flex-1 flex-col md:flex-row">
       <aside className="bg-forest-900 text-forest-200 md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col dark:bg-forest-950 dark:md:border-r dark:md:border-white/5">
-        <div className="flex items-center gap-3 px-4 py-4 md:px-5 md:py-5">
+        {/* Тэмдэг дээр дарвал нийтийн нүүр хуудас руу */}
+        <Link
+          href="/"
+          title="Нүүр хуудас руу буцах"
+          className="group mx-2 my-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/5 md:mx-3 md:my-3"
+        >
           <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-forest-800 text-brass-400 ring-1 ring-white/10">
             <BookOpen className="size-5" aria-hidden />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-serif text-lg leading-tight font-semibold text-white">Номын сан</p>
             <p className="truncate text-xs text-forest-300">Ажлын хэсэг</p>
           </div>
-        </div>
+          <House className="size-4 shrink-0 text-forest-300 opacity-60 transition group-hover:text-white group-hover:opacity-100" aria-hidden />
+        </Link>
 
         <nav className="flex gap-1 overflow-x-auto px-2 pb-3 text-sm [scrollbar-width:none] md:flex-1 md:flex-col md:gap-0.5 md:overflow-y-auto md:px-3 md:pb-4">
           <NavLink href="/staff" exact icon={<LayoutDashboard aria-hidden />}>
