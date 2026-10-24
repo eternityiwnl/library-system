@@ -46,6 +46,27 @@ export const auth = betterAuth({
     "/request-password-reset",
     "/reset-password",
     "/is-username-available",
+    // Admin plugin-ийн HTTP замууд. Хэрэглэгч үүсгэх г.м.-ийг манай Server Action-ууд
+    // auth.api-аар серверээс дууддаг (энэ жагсаалт зөвхөн хөтчөөс ирэх хүсэлтийг хаана).
+    // Хаахгүй бол админ эрхтэй сесс аудитын бүртгэлгүйгээр хэрэглэгч устгах, эрх солих,
+    // өөр хүн болж нэвтрэх (impersonate) боломжтой.
+    ...[
+      "ban-user",
+      "create-user",
+      "get-user",
+      "has-permission",
+      "impersonate-user",
+      "list-user-sessions",
+      "list-users",
+      "remove-user",
+      "revoke-user-session",
+      "revoke-user-sessions",
+      "set-role",
+      "set-user-password",
+      "stop-impersonating",
+      "unban-user",
+      "update-user",
+    ].map((name) => `/admin/${name}`),
   ],
   rateLimit: {
     // Serverless дээр санах ой хуваалцагдахгүй тул DB-д хадгална

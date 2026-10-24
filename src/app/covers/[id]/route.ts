@@ -6,7 +6,8 @@ import { bookCovers } from "@/db/schema";
 // Зураг солиход cover_version өсөж, URL өөрчлөгдөнө.
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
-  if (!Number.isInteger(id)) return new Response("Not found", { status: 404 });
+  // Postgres integer-ээс их тоо өгвөл DB алдаа (500) биш 404 буцаана
+  if (!Number.isInteger(id) || id < 1 || id > 2_147_483_647) return new Response("Not found", { status: 404 });
 
   const [cover] = await db
     .select({ mime: bookCovers.mime, data: bookCovers.data })

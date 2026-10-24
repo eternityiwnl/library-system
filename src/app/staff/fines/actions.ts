@@ -10,6 +10,9 @@ import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 
 export async function resolveFine(id: number, outcome: "paid" | "waived"): Promise<FormState> {
+  // Аргументууд хөтчөөс ирдэг тул TypeScript-ийн төрөлд найдахгүй
+  if (outcome !== "paid" && outcome !== "waived") return { error: "Буруу үйлдэл" };
+  if (!Number.isSafeInteger(id)) return { error: "Торгууль олдсонгүй" };
   // Төлбөр хүлээн авах — номын санч; торгуулиас чөлөөлөх — зөвхөн админ
   const staff = outcome === "waived" ? await requireRole("admin") : await requireRole("admin", "librarian");
 
