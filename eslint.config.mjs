@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Танилцуулгын файлууд (git-д ороогүй, сайтын код биш)
+    "presentation/**",
   ]),
 ]);
 
